@@ -53,9 +53,9 @@ Requires Python 3.10+.
 Then open http://127.0.0.1:8000 in your browser.
 The first run installs the libraries, which can take a few minutes.
 
-> **Note:** the trained model weights (`nbeatsx_model/NBEATSx_0.ckpt`, 31 MB) are too
-> large for this repository's web upload limit, so they are not included here. Place the
-> file in `nbeatsx_model/` before running the app.
+> **Model weights:** download the trained model
+> [`NBEATSx_0.ckpt` from the v1.0 release](https://github.com/Ishanadeem/smartvolt/releases/download/v1.0/NBEATSx_0.ckpt)
+> (31 MB) and place it in the `nbeatsx_model/` folder before running the app.
 
 ### Turning on the AI agents (optional)
 The app works without an LLM, using built-in explanations. To enable the real AI
