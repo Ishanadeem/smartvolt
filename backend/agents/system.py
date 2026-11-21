@@ -20,6 +20,15 @@ from .recommender import recommend
 
 PROVIDER = os.environ.get("SMARTVOLT_LLM_PROVIDER", "groq").lower()
 
+# Which chat model to use on each provider. These can be overridden with an
+# environment variable, so if a provider retires a model you can switch without
+# touching the code. Groq retired "llama-3.3-70b-versatile" (deprecated 16 Aug
+# 2026), which is why the old hard-coded value stopped working; the default
+# below is a current Groq production model.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+GOOGLE_MODEL = os.environ.get("GOOGLE_MODEL", "gemini-2.0-flash")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
 
 def _has_key():
     return bool(os.environ.get("GROQ_API_KEY")
@@ -31,13 +40,13 @@ def _make_model():
     """Create an Agno model for the configured free provider."""
     if os.environ.get("GROQ_API_KEY"):
         from agno.models.groq import Groq
-        return Groq(id="llama-3.3-70b-versatile")
+        return Groq(id=GROQ_MODEL)
     if os.environ.get("GOOGLE_API_KEY"):
         from agno.models.google import Gemini
-        return Gemini(id="gemini-2.0-flash")
+        return Gemini(id=GOOGLE_MODEL)
     if os.environ.get("OPENAI_API_KEY"):
         from agno.models.openai import OpenAIChat
-        return OpenAIChat(id="gpt-4o-mini")
+        return OpenAIChat(id=OPENAI_MODEL)
     return None
 
 
@@ -120,7 +129,16 @@ def _agent(model, name, instructions):
 
 def _run(agent, prompt):
     resp = agent.run(prompt)
-    return (getattr(resp, "content", None) or str(resp)).strip()
+    text = (getattr(resp, "content", None) or str(resp)).strip()
+    # Some providers return an API error as the message content instead of
+    # raising (e.g. a decommissioned model). Detect that and raise so the
+    # caller falls back to the built-in answer rather than showing raw JSON.
+    low = text.lower()
+    if text.startswith("{") and '"error"' in low and (
+            "model_not_found" in low or "does not exist" in low
+            or "invalid_request_error" in low or "decommission" in low):
+        raise RuntimeError("LLM returned an error response: " + text[:200])
+    return text
 
 
 def explain(plan, forecast):
