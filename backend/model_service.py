@@ -26,7 +26,10 @@ logging.getLogger("lightning.pytorch").setLevel(logging.ERROR)
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(HERE, "nbeatsx_model")
-DATA_FILE = os.path.join(HERE, "data", "clean_merged.csv")
+# Built-in Spanish demo dataset (never overwritten) and the user-uploaded set.
+BUILTIN_FILE = os.path.join(HERE, "data", "clean_merged.csv")
+USER_FILE = os.path.join(HERE, "data", "user_merged.csv")
+DATA_FILE = BUILTIN_FILE   # kept for backward compatibility
 
 
 def _keep_dropout_on(module, _inp):
@@ -45,8 +48,16 @@ def _add_calendar(df):
     return df
 
 
+import threading
+
+
 class ForecastService:
     def __init__(self):
+        # One shared model instance is not safe to run from two requests at
+        # once (PyTorch Lightning's predict loop is not reentrant), and FastAPI
+        # serves sync endpoints from a thread pool. This lock serialises
+        # predictions so concurrent calls queue instead of crashing (was a 500).
+        self._predict_lock = threading.Lock()
         self.nf = NeuralForecast.load(path=MODEL_DIR)
         self.model = self.nf.models[0]
         # keep every dropout layer active during inference -> enables MC Dropout
@@ -55,7 +66,24 @@ class ForecastService:
             if isinstance(mod, torch.nn.Dropout):
                 mod.register_forward_pre_hook(_keep_dropout_on)
                 self.n_dropout += 1
+        self.active_file = BUILTIN_FILE      # "builtin" | "user" source
         self.reload_data()
+
+    @property
+    def source(self):
+        return "user" if self.active_file == USER_FILE else "builtin"
+
+    def use_builtin(self):
+        """Switch back to the built-in Spanish demo dataset."""
+        self.active_file = BUILTIN_FILE
+        return self.reload_data()
+
+    def use_user(self):
+        """Switch to the last uploaded-and-cleaned user dataset."""
+        if not os.path.exists(USER_FILE):
+            raise ValueError("No uploaded data yet — upload your CSV files first.")
+        self.active_file = USER_FILE
+        return self.reload_data()
 
     def reload_data(self):
         self.frame = self._load_frame()
@@ -64,7 +92,7 @@ class ForecastService:
         return self.frame
 
     def _load_frame(self):
-        df = pd.read_csv(DATA_FILE)
+        df = pd.read_csv(self.active_file)
         df["ds"] = pd.to_datetime(df["time"], utc=True)
         df = df.rename(columns={"price actual": "y"})
         df["unique_id"] = "ES"
@@ -76,6 +104,7 @@ class ForecastService:
     def data_status(self):
         return {
             "rows": int(len(self.frame)),
+            "source": self.source,
             "start": str(self.frame["ds"].min()),
             "end": str(self.frame["ds"].max()),
             "min_forecast_day": str(self.min_day.date()),
@@ -101,11 +130,13 @@ class ForecastService:
         futr_cols = ["unique_id", "ds"] + FUTR_EXOG
         h, f = hist[hist_cols], futr[futr_cols]
         runs = []
-        for i in range(samples):
-            seed = 1000 + i
-            self.model.random_seed = seed          # override neuralforecast's fixed seed
-            torch.manual_seed(seed)
-            runs.append(self.nf.predict(df=h, futr_df=f)["NBEATSx"].to_numpy())
+        # Serialise all model.predict calls (see note in __init__).
+        with self._predict_lock:
+            for i in range(samples):
+                seed = 1000 + i
+                self.model.random_seed = seed          # override neuralforecast's fixed seed
+                torch.manual_seed(seed)
+                runs.append(self.nf.predict(df=h, futr_df=f)["NBEATSx"].to_numpy())
         return np.vstack(runs)
 
     def forecast(self, day, samples=MC_SAMPLES):

@@ -12,20 +12,13 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-# Full model needs PyTorch; the cloud deployment ships without it and serves
-# pre-computed forecasts instead. Pick whichever is available.
-if os.environ.get("SMARTVOLT_LITE") == "1":
-    from .model_service_lite import ForecastService
-else:
-    try:
-        from .model_service import ForecastService
-    except Exception:
-        from .model_service_lite import ForecastService
+from .model_service import ForecastService
 from .decision_service import decide
 from .database import Database
 from . import data_pipeline
 from .agents.recommender import recommend
 from .agents.system import explain as agent_explain, chat as agent_chat
+from .green_service import compute_green
 from pydantic import BaseModel
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,9 +27,14 @@ FRONTEND = os.path.join(HERE, "frontend")
 # If the user pasted a free Groq key into api_key.txt, load it so the AI agents turn on.
 _keyfile = os.path.join(HERE, "api_key.txt")
 if os.path.exists(_keyfile) and not os.environ.get("GROQ_API_KEY"):
-    _k = open(_keyfile, encoding="utf-8").read().strip()
-    if _k and _k.startswith("gsk_"):
-        os.environ["GROQ_API_KEY"] = _k
+    # Scan for the line that holds the key, so the instruction lines in the
+    # file don't stop it loading (the old code required the WHOLE file to
+    # start with gsk_, so a pasted key left below the instructions was ignored).
+    for _line in open(_keyfile, encoding="utf-8").read().splitlines():
+        _line = _line.strip()
+        if _line.startswith("gsk_") and "XXXX" not in _line:
+            os.environ["GROQ_API_KEY"] = _line
+            break
 
 app = FastAPI(title="Electricity Price Forecasting")
 
@@ -53,10 +51,6 @@ def data_status():
 
 @app.post("/api/upload")
 async def upload(energy: UploadFile = File(...), weather: UploadFile = File(...)):
-    if forecaster.data_status().get("mode") == "cloud":
-        raise HTTPException(status_code=400, detail="Uploading a new dataset needs the live "
-                            "model, which runs in the desktop version. The cloud demo uses the "
-                            "built-in Spanish dataset.")
     tmp = tempfile.mkdtemp()
     try:
         ep = os.path.join(tmp, "energy.csv")
@@ -65,8 +59,10 @@ async def upload(energy: UploadFile = File(...), weather: UploadFile = File(...)
             shutil.copyfileobj(energy.file, f)
         with open(wp, "wb") as f:
             shutil.copyfileobj(weather.file, f)
-        data_pipeline.build_merged(ep, wp)      # clean + merge -> data/clean_merged.csv
-        forecaster.reload_data()                # reload the new data
+        # clean + merge -> data/user_merged.csv (built-in demo file is left intact)
+        from .model_service import USER_FILE
+        data_pipeline.build_merged(ep, wp, out=USER_FILE)
+        forecaster.use_user()                   # switch active data to the upload
         db.populate_history(forecaster.frame)   # refresh price_history
         return {"ok": True, **forecaster.data_status()}
     except Exception as e:
@@ -76,19 +72,17 @@ async def upload(energy: UploadFile = File(...), weather: UploadFile = File(...)
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+@app.post("/api/use_builtin")
+def use_builtin():
+    """Switch the active dataset back to the built-in Spanish demo data."""
+    forecaster.use_builtin()
+    db.populate_history(forecaster.frame)
+    return {"ok": True, **forecaster.data_status()}
+
+
 @app.get("/api/metrics")
 def metrics():
     return {"metrics": db.get_metrics()}
-
-
-def _log_history(day, fc):
-    """Save a forecast to the History log (one entry per day; re-runs update it)."""
-    try:
-        prices = [r["predicted"] for r in fc["rows"]]
-        saving = round(max(prices) - min(prices), 1)   # cheapest-vs-dearest spread
-        db.save_forecast(day, fc["rows"], saving)
-    except Exception:
-        pass
 
 
 @app.get("/api/forecast")
@@ -97,7 +91,16 @@ def forecast(day: str):
         fc = forecaster.forecast(day)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    _log_history(day, fc)   # show every forecast you run in History
+    # persist to history so the History page shows every forecast you run
+    try:
+        # Store the SAME household euro saving the Savings page shows for "today",
+        # so the running total adds up in the same unit (previously this stored a
+        # cheapest-vs-dearest price spread in EUR/MWh, which mixed units).
+        default_apps = ["washing_machine", "dishwasher", "ev", "water_heater"]
+        saving = round(recommend(fc, default_apps)["total_appliance_saving_eur"], 2)
+        db.save_forecast(day, fc["rows"], saving)
+    except Exception:
+        pass
     return fc
 
 
@@ -116,6 +119,15 @@ def decision(day: str):
 @app.get("/api/history")
 def history():
     return {"history": db.get_history()}
+
+
+@app.get("/api/green")
+def green(day: str):
+    """Greenest-hours view: real carbon intensity + energy mix from the dataset."""
+    try:
+        return compute_green(forecaster.frame, day)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 def _parse_custom(custom: str):
@@ -142,7 +154,6 @@ def plan(day: str, appliances: str = "washing_machine,dishwasher,ev,water_heater
     apps = [a.strip() for a in appliances.split(",") if a.strip()]
     p = recommend(fc, apps, _parse_custom(custom))
     ex = agent_explain(p, fc)
-    _log_history(day, fc)   # a plan is a forecast too -> log it in History
     return {"plan": p, "explanation": ex}
 
 
@@ -165,38 +176,12 @@ def chat(payload: ChatIn):
 
 # ---- login / accounts ----
 import secrets as _secrets
-TOKENS = {}   # in-memory cache: token -> username (backed by the DB session table)
-
-
-def _user_of(token):
-    """Resolve a token to a username, from the in-memory cache or the DB
-    (so sessions survive a server restart)."""
-    if not token:
-        return None
-    u = TOKENS.get(token)
-    if u:
-        return u
-    u = db.get_session(token)
-    if u:
-        TOKENS[token] = u
-    return u
-
-
-def _new_session(username):
-    tok = _secrets.token_hex(16)
-    uname = username.strip().lower()
-    TOKENS[tok] = uname
-    db.add_session(tok, uname)
-    return tok
+TOKENS = {}   # token -> username (in-memory session)
 
 
 class AuthIn(BaseModel):
     username: str
     password: str
-
-
-class TokenIn(BaseModel):
-    token: str
 
 
 class ProfileIn(BaseModel):
@@ -210,7 +195,7 @@ def signup(p: AuthIn):
         raise HTTPException(status_code=400, detail="Username needs 3+ letters and password 4+ characters.")
     if not db.create_user(p.username, p.password):
         raise HTTPException(status_code=400, detail="That username is already taken.")
-    tok = _new_session(p.username)
+    tok = _secrets.token_hex(16); TOKENS[tok] = p.username.strip().lower()
     return {"token": tok, "username": p.username.strip().lower(),
             "appliances": db.get_appliances(p.username), "prefs": db.get_prefs(p.username)}
 
@@ -219,27 +204,9 @@ def signup(p: AuthIn):
 def login(p: AuthIn):
     if not db.check_user(p.username, p.password):
         raise HTTPException(status_code=401, detail="Wrong username or password.")
-    tok = _new_session(p.username)
+    tok = _secrets.token_hex(16); TOKENS[tok] = p.username.strip().lower()
     return {"token": tok, "username": p.username.strip().lower(),
             "appliances": db.get_appliances(p.username), "prefs": db.get_prefs(p.username)}
-
-
-@app.get("/api/me")
-def me(token: str):
-    """Validate a saved token. Returns the account if valid, else 401 so the
-    frontend can clear a stale/ghost session and show the login screen."""
-    user = _user_of(token)
-    if not user:
-        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
-    return {"username": user, "appliances": db.get_appliances(user),
-            "prefs": db.get_prefs(user)}
-
-
-@app.post("/api/logout")
-def logout(p: TokenIn):
-    TOKENS.pop(p.token, None)
-    db.del_session(p.token)
-    return {"ok": True}
 
 
 class SocialIn(BaseModel):
@@ -257,7 +224,7 @@ def social_login(p: SocialIn):
     uname = email.split("@")[0] + "." + prov.lower()
     if not db.check_user(uname, "social-" + email):
         db.create_user(uname, "social-" + email)
-    tok = _new_session(uname)
+    tok = _secrets.token_hex(16); TOKENS[tok] = uname.strip().lower()
     return {"token": tok, "username": f"{prov} user",
             "appliances": db.get_appliances(uname), "prefs": db.get_prefs(uname)}
 
@@ -281,7 +248,7 @@ def ai_status():
 
 @app.post("/api/profile")
 def save_profile(p: ProfileIn):
-    user = _user_of(p.token)
+    user = TOKENS.get(p.token)
     if not user:
         raise HTTPException(status_code=401, detail="Please log in again.")
     db.set_appliances(user, p.appliances)
@@ -295,7 +262,7 @@ class PrefsIn(BaseModel):
 
 @app.post("/api/prefs")
 def save_prefs(p: PrefsIn):
-    user = _user_of(p.token)
+    user = TOKENS.get(p.token)
     if not user:
         raise HTTPException(status_code=401, detail="Please log in again.")
     db.set_prefs(user, p.prefs)
@@ -310,7 +277,7 @@ class PwChange(BaseModel):
 
 @app.post("/api/change_password")
 def change_password(p: PwChange):
-    user = _user_of(p.token)
+    user = TOKENS.get(p.token)
     if not user:
         raise HTTPException(status_code=401, detail="Please log in again.")
     if len(p.new_password) < 4:
@@ -320,13 +287,16 @@ def change_password(p: PwChange):
     return {"ok": True}
 
 
+class TokenIn(BaseModel):
+    token: str
+
+
 @app.post("/api/delete_account")
 def delete_account(p: TokenIn):
-    user = _user_of(p.token)
+    user = TOKENS.get(p.token)
     if not user:
         raise HTTPException(status_code=401, detail="Please log in again.")
     db.delete_user(user)
-    db.del_user_sessions(user)
     TOKENS.pop(p.token, None)
     return {"ok": True}
 

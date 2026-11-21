@@ -11,6 +11,28 @@ import numpy as np
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(HERE, "data", "clean_merged.csv")
 
+# Columns the uploaded files MUST contain (Spanish-market schema) so the trained
+# N-BEATSx model has every input it needs. Checked up front so a bad file gives a
+# clear "which column is missing" message instead of a crash or a wrong result.
+REQUIRED_ENERGY = [
+    "time", "price actual", "total load forecast", "forecast solar day ahead",
+    "forecast wind onshore day ahead", "total load actual", "generation solar",
+    "generation wind onshore", "generation nuclear", "generation fossil gas",
+    "generation fossil hard coal",
+]
+REQUIRED_WEATHER = ["dt_iso", "temp", "pressure", "humidity", "wind_speed", "clouds_all"]
+
+
+def _check_columns(energy_path, weather_path):
+    e_cols = pd.read_csv(energy_path, nrows=0).columns
+    w_cols = pd.read_csv(weather_path, nrows=0).columns
+    miss = [f"energy: {c}" for c in REQUIRED_ENERGY if c not in e_cols]
+    miss += [f"weather: {c}" for c in REQUIRED_WEATHER if c not in w_cols]
+    if miss:
+        raise ValueError("Missing required columns → " + "; ".join(miss)
+                         + ". Use the same column names as the Spanish-market "
+                           "energy_dataset.csv and weather_features.csv files.")
+
 
 def clean_energy(path):
     df = pd.read_csv(path)
@@ -54,6 +76,7 @@ def add_calendar(df):
 
 
 def build_merged(energy_path, weather_path, out=OUT):
+    _check_columns(energy_path, weather_path)
     energy = clean_energy(energy_path)
     weather = clean_weather(weather_path)
     merged = add_calendar(pd.merge(energy, weather, on="time", how="inner"))

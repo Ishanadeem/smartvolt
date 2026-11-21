@@ -56,30 +56,6 @@ class Database:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE, salt TEXT, pw_hash TEXT,
                 appliances TEXT DEFAULT '[]', prefs TEXT DEFAULT '{}')""")
-            c.execute("""CREATE TABLE IF NOT EXISTS session (
-                token TEXT PRIMARY KEY, username TEXT)""")
-            c.commit()
-
-    # ---- login sessions (persist across restarts) ----
-    def add_session(self, token, username):
-        with self._conn() as c:
-            c.execute("INSERT OR REPLACE INTO session(token,username) VALUES (?,?)",
-                      (token, username.strip().lower()))
-            c.commit()
-
-    def get_session(self, token):
-        with self._conn() as c:
-            row = c.execute("SELECT username FROM session WHERE token=?", (token,)).fetchone()
-        return row[0] if row else None
-
-    def del_session(self, token):
-        with self._conn() as c:
-            c.execute("DELETE FROM session WHERE token=?", (token,))
-            c.commit()
-
-    def del_user_sessions(self, username):
-        with self._conn() as c:
-            c.execute("DELETE FROM session WHERE username=?", (username.strip().lower(),))
             c.commit()
 
     # ---- user accounts (login) ----
@@ -202,7 +178,8 @@ class Database:
                 WHERE f.actual_price IS NOT NULL
                 GROUP BY f.run_date ORDER BY f.run_date DESC LIMIT ?""", (limit,)).fetchall()
         return [dict(day=r[0], avg_price=r[1], mape=r[2],
-                     actions=(f"est. saving EUR {r[3]}/MWh" if r[3] else "")) for r in rows]
+                     saving=(r[3] or 0),   # numeric household euro saving the savings page sums & charts
+                     actions=(f"est. saving EUR {r[3]}" if r[3] else "")) for r in rows]
 
     def dump_sql(self, out_path):
         with self._conn() as c:
