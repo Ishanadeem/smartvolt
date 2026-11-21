@@ -4,592 +4,783 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SmartVolt — Smart Electricity Saver (Spain)</title>
-<meta name="description" content="SmartVolt forecasts day-ahead electricity prices for Spain with a deep-learning model and tells you the cheapest hours to run your appliances, charge your EV and use your battery.">
-<meta name="theme-color" content="#0a3a44">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23f59e0b'/%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6l1-8Z' fill='%230a3a44'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0d3a49">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23f59e0b'/%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6l1-8Z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f7fb;--card:#fff;--ink:#0f2231;--muted:#6b7a8d;--line:#e7edf3;--primary:#0e7490;--primary-d:#0b5566;--accent:#f59e0b;--green:#16a34a;--red:#dc2626;--shadow:0 2px 10px rgba(13,44,66,.06);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:"Inter",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
-svg.i{width:20px;height:20px;flex-shrink:0;}
-.app{display:flex;flex-direction:column;min-height:100vh;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Inter",sans-serif}
+:root{--navy:#0d3a49;--navy2:#104a5c;--blue:#0e7490;--blue2:#2aa7c1;--green:#22c55e;--amber:#f7b955;--bg:#f4f8fd;--muted:#6b7c93;--line:#e6edf6;--ink:#0d3a49}
+body{background:var(--bg);color:var(--ink)}
+h1,h2,h3,h4,.brand,.pop{font-family:"Poppins",sans-serif}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 28px}
+.hidden{display:none!important}
+a{cursor:pointer}
+/* top bar */
+.topbar{background:var(--navy);color:#cdd9ea;font-size:13px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:42px}
+.topbar a{color:#cdd9ea;text-decoration:none;margin-left:18px}
+.topbar .l span{margin-right:22px}
+.topbar .l b,.topbar a:hover{color:#fff}
 /* header */
-.top{position:sticky;top:0;z-index:50;background:linear-gradient(100deg,#0a3a44,#0e7490);color:#fff;padding:12px 26px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(10,58,68,.22);flex-wrap:wrap;gap:10px;}
-.brand{display:flex;align-items:center;gap:11px;}
-.brand .logo{width:36px;height:36px;background:linear-gradient(160deg,#ffcb47,#f59e0b);border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(245,158,11,.35);}
-.brand h1{font-size:18px;font-weight:800;letter-spacing:-.2px;line-height:1;}
-.brand .tag{font-size:11px;color:#c5e7ee;font-weight:500;}
-.hnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.nav{display:flex;gap:2px;flex-wrap:wrap;background:rgba(255,255,255,.08);padding:4px;border-radius:12px;}
-.nav button{display:flex;align-items:center;gap:7px;background:none;border:none;color:#d5edf2;padding:8px 13px;border-radius:9px;font-size:13.5px;cursor:pointer;font-weight:600;font-family:inherit;transition:.15s;}
-.nav button:hover{background:rgba(255,255,255,.10);color:#fff;}
-.nav button.active{background:#fff;color:#0b5566;}
-.nav button svg{width:16px;height:16px;}
-.userbox{display:flex;align-items:center;gap:9px;color:#d8eef3;font-size:13px;font-weight:600;}
-.userbox .who{display:flex;align-items:center;gap:6px;}
-.logout{background:rgba(255,255,255,.12);border:none;color:#fff;padding:7px 12px;border-radius:9px;font-size:12.5px;cursor:pointer;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:6px;}
-.logout:hover{background:rgba(255,255,255,.2);}
-.wrap{padding:26px 26px;max-width:1040px;margin:0 auto;width:100%;flex:1;}
-/* hero */
-.hero{background:linear-gradient(120deg,#0a3a44,#0e7490 88%);border-radius:20px;padding:30px 34px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:26px;overflow:hidden;box-shadow:0 8px 28px rgba(10,58,68,.22);}
-.hero .htext{flex:1;min-width:240px;}
-.hero h2{font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-.4px;margin-bottom:10px;color:#fff;}
-.hero p{font-size:14.5px;color:#cfeaf1;line-height:1.6;margin-bottom:18px;max-width:440px;}
-.hero .stats{display:flex;gap:12px;flex-wrap:wrap;}
-.hero .stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:10px 15px;min-width:92px;}
-.hero .stat b{display:block;font-size:19px;font-weight:800;color:#ffd27a;line-height:1;}
-.hero .stat span{font-size:11.5px;color:#bfe0e8;}
-.hero .hart{width:250px;flex-shrink:0;}
-.hero .hart svg{width:100%;height:auto;display:block;}
-@media(max-width:760px){.hero{flex-direction:column;text-align:center;padding:26px 22px;}.hero p{margin-left:auto;margin-right:auto;}.hero .stats{justify-content:center;}.hero .hart{width:200px;}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow);}
-.card h2{font-size:15px;margin-bottom:15px;color:var(--ink);display:flex;align-items:center;gap:10px;font-weight:700;}
-.card h2 .ic{width:30px;height:30px;border-radius:9px;background:#e8f6f9;color:var(--primary);display:inline-flex;align-items:center;justify-content:center;}
-.card h2 .ic svg{width:17px;height:17px;}
-.sub{font-size:13.5px;color:var(--muted);margin:-8px 0 16px;line-height:1.5;}
-.row{display:flex;gap:13px;align-items:center;flex-wrap:wrap;}
-label{font-size:13px;color:#54637a;font-weight:600;}
-input,select{padding:10px 13px;border:1px solid #d3dde8;border-radius:11px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
-input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,116,144,.12);}
-.btn{background:var(--primary);color:#fff;border:none;padding:11px 20px;border-radius:11px;font-size:14px;cursor:pointer;font-weight:700;font-family:inherit;box-shadow:0 3px 9px rgba(14,116,144,.25);transition:.15s;}
-.btn:hover{background:var(--primary-d);}.btn:disabled{opacity:.6;box-shadow:none;}
-.btn.ghost{background:#eef4f7;color:var(--primary);border:1px solid #d3e6ec;box-shadow:none;}
-.apps{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px;}
-.apps label{display:flex;align-items:center;gap:8px;background:#f5f8fb;border:1.5px solid #e5edf4;border-radius:22px;padding:8px 15px;cursor:pointer;font-size:13px;font-weight:600;color:#40506a;transition:.15s;user-select:none;}
-.apps label:has(input:checked){background:#e8f6f9;border-color:#8fd3e0;color:#0b5566;}
-.apps label svg{width:17px;height:17px;color:#0e7490;}
-.apps input{display:none;}
-.kpi{display:flex;gap:14px;flex-wrap:wrap;}
-.kpi .box{background:linear-gradient(165deg,#f3fbfd,#e9f4f8);border:1px solid #ddeef2;border-radius:15px;padding:17px 19px;flex:1;min-width:150px;}
-.kpi .box .n{font-size:22px;font-weight:800;color:var(--primary-d);letter-spacing:-.5px;}
-.kpi .box .l{font-size:12px;color:#6b7a8d;margin-top:5px;font-weight:500;}
-.kpi .box.save{background:linear-gradient(165deg,#effcf4,#e6f8ee);border-color:#c9edd7;}.kpi .box.save .n{color:var(--green);}
-.rec{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;margin-bottom:9px;transition:.15s;}
-.rec:hover{box-shadow:var(--shadow);border-color:#d6e6ec;}
-.rec .emoji{width:42px;height:42px;border-radius:12px;background:#f1f8fa;display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;}
-.rec .emoji svg{width:22px;height:22px;}
-.rec .info{flex:1;}.rec .a{font-weight:700;color:var(--ink);font-size:14px;}.rec .t{color:var(--primary);font-weight:600;font-size:13px;margin-top:2px;}
-.rec .s{background:#e7f7ee;color:var(--green);font-weight:700;border-radius:20px;padding:6px 13px;font-size:12.5px;white-space:nowrap;}
-.rec .s.cheap{background:#e8f6f9;color:var(--primary-d);}
-.siglegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:12px;}
-.siglegend span{display:inline-flex;align-items:center;gap:6px;}
-.dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
-.sigwrap{display:flex;flex-wrap:wrap;gap:5px;}
-.sig{font-size:11px;font-weight:700;border-radius:8px;padding:6px 6px;text-align:center;min-width:58px;flex:1 0 58px;}
-.sig .h{display:block;font-size:10px;font-weight:600;opacity:.75;margin-bottom:1px;}
-.sig .p{display:block;font-size:9.5px;font-weight:600;opacity:.7;margin-top:1px;}
-.sig.buy{background:#e7f7ee;color:#15803d;}
-.sig.sell{background:#fdecec;color:#c0392b;}
-.sig.hold{background:#eef2f7;color:#64748b;}
-body.dark .sig.buy{background:#12271e;color:#4ade80;}
-body.dark .sig.sell{background:#2a1517;color:#f87171;}
-body.dark .sig.hold{background:#1a2836;color:#94a3b8;}
-.solar{background:linear-gradient(160deg,#fffaf0,#fff4de);border:1px solid #f5e2b8;border-radius:14px;padding:15px 18px;font-size:13.5px;line-height:1.6;color:#7a5a12;display:flex;gap:12px;align-items:flex-start;}
-.solar svg{width:22px;height:22px;color:#e0a516;flex-shrink:0;margin-top:1px;}
-body.dark .solar{background:#2a2410;border-color:#4a3f18;color:#e8d199;}
-.ai{background:linear-gradient(160deg,#f0fbff,#e9f6fb);border:1px solid #cfe9f2;border-radius:15px;padding:17px 20px;font-size:14px;line-height:1.65;color:#28454f;}
-.aibadge{display:inline-flex;align-items:center;gap:4px;background:var(--primary);color:#fff;font-size:10px;font-weight:800;border-radius:20px;padding:3px 9px;margin-left:9px;vertical-align:middle;text-transform:uppercase;letter-spacing:.4px;}
-.aibadge.off{background:#94a3b8;}
-.chat{display:flex;flex-direction:column;gap:11px;min-height:260px;max-height:440px;overflow-y:auto;padding:8px 3px;}
-.msg{max-width:82%;padding:11px 15px;border-radius:16px;font-size:14px;line-height:1.55;}
-.msg.u{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:5px;}
-.msg.a{align-self:flex-start;background:#f1f5f9;color:var(--ink);border-bottom-left-radius:5px;}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
-.chips button{background:#eef7fa;border:1px solid #cfe9f2;color:var(--primary-d);border-radius:20px;padding:7px 13px;font-size:12.5px;cursor:pointer;font-weight:600;font-family:inherit;}
-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;border-radius:12px;border:1px solid var(--line);overflow:hidden;}
-th,td{padding:11px 13px;text-align:left;border-bottom:1px solid #eef2f7;}
-th{background:#f6f9fc;color:#54637a;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
-tr:last-child td{border-bottom:none;}tbody tr:nth-child(even){background:#fafcfe;}
-.grey{color:#94a3b8;font-size:12px;margin-top:9px;}.prose{font-size:14px;line-height:1.75;color:#3a4a5c;}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid #cfe0e6;border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px;}
-@keyframes sp{to{transform:rotate(360deg)}}
-.hidden{display:none!important;}
-/* dark mode */
-body.dark{--bg:#0d1620;--card:#131f2b;--ink:#e6eef5;--muted:#90a4b6;--line:#233240;--shadow:0 2px 10px rgba(0,0,0,.35);}
-body.dark .card h2 .ic{background:#0f3540;color:#3cc9e3;}
-body.dark .apps label{background:#182735;border-color:#243545;color:#b8c8d6;}
-body.dark .apps label:has(input:checked){background:#123540;border-color:#2a7d8f;color:#7fdcec;}
-body.dark .apps label svg,body.dark .rec .emoji{color:#3cc9e3;}
-body.dark .kpi .box{background:#152430;border-color:#243545;}
-body.dark .kpi .box.save{background:#12271e;border-color:#1e4030;}
-body.dark .kpi .box .n{color:#3cc9e3;}
-body.dark input,body.dark select{background:#0f1c27;border-color:#283a49;color:#e6eef5;}
-body.dark th{background:#152430;color:#90a4b6;}body.dark td{border-color:#20303d;}
-body.dark tbody tr:nth-child(even){background:#111c26;}
-body.dark .rec{border-color:#233240;}body.dark .rec .emoji{background:#0f3540;}body.dark .rec .a{color:#e6eef5;}
-body.dark .ai{background:#102a33;border-color:#1e4855;color:#bfe0e9;}
-body.dark .chips button{background:#123039;border-color:#1e4855;color:#7fdcec;}
-body.dark .msg.a{background:#1a2836;color:#e6eef5;}
-body.dark .btn.ghost{background:#152430;color:#3cc9e3;border-color:#28414f;}
-body.dark .team .m{background:#152430;border-color:#243545;}
-body.dark .grey{color:#7f93a5;}body.dark .prose{color:#c2d2df;}
-/* header icon buttons */
-.iconbtn{background:rgba(255,255,255,.12);border:none;color:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.iconbtn:hover{background:rgba(255,255,255,.22);}.iconbtn svg{width:17px;height:17px;}
-/* modal */
-.modal{position:fixed;inset:0;background:rgba(8,25,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:90;}
-.modal .m{background:var(--card);border-radius:18px;padding:26px 28px;max-width:450px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3);}
-.modal h3{font-size:19px;margin-bottom:10px;color:var(--ink);font-weight:800;}
-.modal p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:10px;}
-.setlbl{font-size:13px;font-weight:700;color:var(--ink);margin:16px 0 7px;display:block;}
-.danger{background:#fdecec;color:#c0392b;border:1px solid #f3c9c9;padding:10px 16px;border-radius:11px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px;}
-.team{display:flex;gap:10px;flex-wrap:wrap;}
-.team .m{flex:1;min-width:180px;background:#f6f9fc;border:1px solid var(--line);border-radius:12px;padding:13px 15px;}
-.team .m b{color:var(--ink);font-size:14px;}.team .m span{color:var(--muted);font-size:12.5px;}
+.header{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 14px rgba(14,42,79,.05);position:sticky;top:0;z-index:60}
+.header .wrap{display:flex;align-items:center;height:74px;gap:30px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:23px;color:var(--navy);cursor:pointer}
+.brand .bolt{width:34px;height:34px;background:linear-gradient(135deg,#f7b955,#f59e0b);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 14px rgba(245,158,11,.35)}
+.brand .bolt svg{width:19px;height:19px}
+.brand .v{color:var(--blue)}
+.nav{display:flex;gap:24px;margin-left:8px}
+.nav>a,.nav .morelink{color:#33475f;text-decoration:none;font-weight:500;font-size:15px;white-space:nowrap}
+.nav>a.active,.nav>a:hover,.nav .morelink.active,.nav .morelink:hover{color:var(--blue)}
+.hasmore{position:relative}
+.moremenu{position:absolute;top:118%;left:-14px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(14,42,79,.16);padding:8px;min-width:186px;display:none;z-index:100}
+.hasmore.open .moremenu{display:block}
+.morelink{cursor:pointer}
+.moremenu a{display:block;padding:10px 14px;border-radius:9px;color:#33475f;text-decoration:none;font-size:14px;font-weight:500}
+.moremenu a:hover,.moremenu a.active{background:#e6f4f7;color:var(--blue)}
+.hright{margin-left:auto;display:flex;align-items:center;gap:14px}
+.icirc{width:40px;height:40px;border-radius:50%;background:#e6f4f7;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer}
+.icirc svg{width:18px;height:18px}
+.userchip{display:flex;align-items:center;gap:9px;cursor:pointer}
+.uav{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#0e7490,#2aa7c1);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Poppins";font-weight:700;font-size:16px}
+.uinfo b{display:block;font-size:14px;color:var(--navy);line-height:1.15;font-family:"Poppins"}
+.uinfo small{font-size:12px;color:var(--muted)}
+.logout{background:#fff;color:var(--blue);border:1.5px solid #bfe3ea;padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+.logout:hover{background:#f0fafc}
+/* buttons */
+.btn{background:linear-gradient(135deg,var(--blue),#15a3bd);color:#fff;border:none;padding:11px 22px;border-radius:9px;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 8px 18px rgba(14,116,144,.28);font-family:inherit}
+.btn:hover{filter:brightness(1.05)}.btn:disabled{opacity:.6;box-shadow:none;cursor:default}
+.btn.gr{background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 8px 18px rgba(34,197,94,.28)}
+.btn.ghost{background:#fff;color:var(--blue);border:1.5px solid #bfe3ea;box-shadow:none}
+/* banner */
+.banner{background:linear-gradient(120deg,var(--navy),#0e5468 55%,#0e6b85);color:#fff}
+.banner .wrap{padding:42px 28px;text-align:center}
+.banner h1{font-size:36px;font-weight:700;letter-spacing:.4px}
+.banner .crumb{margin-top:9px;color:#bcd0f0;font-size:14px}
+.banner .crumb b{color:var(--amber)}
+/* layout */
+.page{padding:40px 0 56px}
+.grid{display:grid;gap:22px}
+.panel{background:#fff;border-radius:18px;box-shadow:0 12px 34px rgba(14,42,79,.07);border:1px solid var(--line);padding:24px 26px;margin-bottom:22px}
+.panel h2{font-family:"Poppins";font-size:20px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.panel h2 svg{width:20px;height:20px;flex-shrink:0;color:var(--blue)}
+.panel .ph{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.panel .sub{color:var(--muted);font-size:14px;margin:6px 0 18px;line-height:1.55}
+.chip{font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;background:#e6f4f7;color:var(--blue);border:1px solid #cfe9ee}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+label{font-size:13px;color:#54637a;font-weight:600}
+input,select{padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fbfdff;color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--blue)}
+.grey{color:var(--muted);font-size:13px;margin-top:8px}
+/* data-source toggle + upload */
+.seg{display:inline-flex;background:#eef4f8;border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;margin-top:4px}
+.seg button{border:none;background:transparent;padding:9px 17px;border-radius:8px;font-weight:600;font-size:13.5px;color:#54637a;cursor:pointer;font-family:inherit}
+.seg button.on{background:#fff;color:var(--blue);box-shadow:0 2px 6px rgba(14,42,79,.09)}
+.upbox{margin-top:16px;border:1.5px dashed #bfe3ea;border-radius:13px;background:#f7fcfd;padding:18px 18px 20px}
+.upgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+.upgrid .f{display:flex;flex-direction:column;gap:6px}
+.upbox input[type=file]{background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px;width:100%;box-sizing:border-box;color:var(--ink)}
+.upbox input[type=file]::file-selector-button{border:none;background:#e6f4f7;color:var(--blue);font-weight:600;padding:6px 12px;border-radius:7px;margin-right:10px;cursor:pointer;font-family:inherit}
+.upstat{margin-top:12px;font-size:13.5px;line-height:1.5}
+.upstat.ok{color:#0e7a4a;font-weight:600}.upstat.bad{color:#c0392b;font-weight:600}
+.srcbadge{font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px}
+.srcbadge.demo{background:#e6f4f7;color:var(--blue);border:1px solid #cfe9ee}
+.srcbadge.user{background:#e9f9ef;color:#0e7a4a;border:1px solid #bfead0}
+.hint{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+@media(max-width:640px){.upgrid{grid-template-columns:1fr}}
+/* kpi row */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px}
+.kpi{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 10px 30px rgba(14,42,79,.06);border:1px solid var(--line)}
+.kpi .l{color:var(--muted);font-size:13px;font-weight:600}
+.kpi .v{font-family:"Poppins";font-size:27px;font-weight:800;color:var(--navy);margin-top:4px}
+.kpi .d{font-size:12px;margin-top:3px}
+.kpi.g .v{color:#16a34a}.kpi.r .v{color:#ef4444}
+.down{color:#16a34a}.up{color:#ef4444}
+/* tables */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:11px 13px;border-bottom:2px solid var(--line)}
+td{padding:11px 13px;font-size:14px;border-bottom:1px solid var(--line);color:#28374a}
+tr:hover td{background:#f7faff}
+.pill{display:inline-block;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600}
+.pill.c{background:#eafaf0;color:#16a34a}.pill.m{background:#e6f4f7;color:#0e7490}.pill.e{background:#fdeee9;color:#ef4444}
+/* home hero */
+.herobox{background:linear-gradient(120deg,#0e7490,#0c5c73 52%,#0a3946);border-radius:26px;padding:44px 48px;color:#fff;display:grid;grid-template-columns:1.08fr .92fr;gap:28px;align-items:center;box-shadow:0 26px 54px rgba(14,42,79,.24);margin-bottom:40px}
+.herobox h1{font-family:"Poppins";font-size:38px;line-height:1.12;font-weight:800}
+.herobox p{color:#d7e3f7;font-size:16px;line-height:1.66;margin:16px 0 24px;max-width:470px}
+.hcta{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+.hcta .b1{height:48px;display:inline-flex;align-items:center;padding:0 24px;background:#fff;color:#0c5c73;border:none;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+.hcta .b2{height:48px;display:inline-flex;align-items:center;padding:0 24px;background:rgba(255,255,255,.10);color:#fff;border:1.5px solid rgba(255,255,255,.45);border-radius:11px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit}
+.hstats{display:flex;gap:14px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:13px 18px}
+.hstat b{display:block;font-family:"Poppins";font-size:23px;color:var(--amber);font-weight:800}
+.hstat small{color:#cddcf3;font-size:12px}
+.hillus svg{width:100%;max-width:360px;height:auto;display:block;margin:0 auto}
+.secth{text-align:center;max-width:640px;margin:6px auto 24px}
+.secth h2{font-family:"Poppins";font-size:24px;color:var(--navy)}
+.secth p{color:var(--muted);font-size:15px;margin-top:4px}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.fcard{background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(14,42,79,.06);border:1px solid var(--line)}
+.fcard .fic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:13px}
+.fcard .fic svg{width:24px;height:24px}
+.fcard h3{font-family:"Poppins";font-size:18px;color:var(--navy);margin-bottom:7px}
+.fcard p{color:var(--muted);font-size:14px;line-height:1.6}
+.fcard a{color:var(--blue);font-weight:600;font-size:14px;text-decoration:none;display:inline-block;margin-top:11px}
+/* forecast chart legend */
+.legend{display:flex;gap:18px;font-size:13px;color:#33475f;margin-bottom:8px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:7px}
+.dot{width:12px;height:12px;border-radius:3px}
+/* plan */
+.hours{display:flex;gap:5px;margin-top:6px}
+.hours i{flex:1;min-width:9px;height:34px;border-radius:4px}
+.tl{color:#9fb0c4;font-size:11px;display:flex;justify-content:space-between;margin-top:5px}
+.badge{display:inline-block;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#eafaf0;color:#16a34a}
+.slot{display:flex;align-items:center;gap:15px;padding:15px 16px;border:1px solid var(--line);border-radius:14px;margin-bottom:11px}
+.slot .ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.slot .ic svg{width:22px;height:22px}
+.slot .body{flex:1}.slot h4{font-family:"Poppins";font-size:15px;color:var(--navy)}
+.slot .win{color:#16a34a;font-weight:700;font-size:14px}.slot small{color:var(--muted);font-size:13px}
+.slot .amt{text-align:right}.slot .amt b{font-family:"Poppins";font-size:18px;color:#16a34a}.slot .amt small{display:block;color:var(--muted)}
+.save{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border-radius:18px;padding:26px;box-shadow:0 16px 36px rgba(34,197,94,.25);height:fit-content}
+.save .big{font-family:"Poppins";font-size:42px;font-weight:800;margin:6px 0}
+.save p{color:#d7f7e2;font-size:14px;line-height:1.55}
+.tip{display:flex;gap:12px;padding:14px;background:#f2fbf5;border-radius:12px;margin-bottom:10px}
+.tip .n{width:28px;height:28px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.tip p{font-size:14px;color:#33475f;line-height:1.5}
+/* trust hero (accuracy) */
+.trust{background:linear-gradient(135deg,#0e7490,#0c5c73);color:#fff;border-radius:18px;padding:28px 32px;display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;box-shadow:0 16px 38px rgba(14,42,79,.2);margin-bottom:22px}
+.trust .big{font-family:"Poppins";font-size:52px;font-weight:800;line-height:1}
+.trust .big small{display:block;font-size:15px;font-weight:600;color:#bfe6ee;letter-spacing:1px;margin-top:4px}
+.trust h2{font-family:"Poppins";font-size:21px;margin-bottom:7px}.trust p{color:#d7ecf1;font-size:15px;line-height:1.6}
+.bar{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.bar .nm{width:150px;font-size:14px;font-weight:600;color:#33475f}
+.bar .track{flex:1;background:#eef2f8;border-radius:8px;height:28px;overflow:hidden}
+.bar .fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:12px;color:#fff;font-size:13px;font-weight:700}
+/* savings */
+.sbars{display:flex;align-items:flex-end;gap:12px;height:190px;padding-top:8px}
+.sbars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
+.sbars .b{width:66%;background:linear-gradient(180deg,#22c55e,#16a34a);border-radius:6px 6px 0 0;min-height:5px}
+.sbars .amt{font-family:"Poppins";font-size:12px;font-weight:700;color:var(--navy)}
+.sbars .mo{font-size:11px;color:var(--muted)}
+/* green legend */
+.glegend{display:flex;gap:18px;font-size:13px;color:#33475f;margin-top:14px;flex-wrap:wrap}
+.glegend span{display:flex;align-items:center;gap:7px}.glegend .sw{width:14px;height:14px;border-radius:4px}
+.mixrow{margin-bottom:11px}
+.mixrow .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.mixtrack{height:9px;border-radius:6px;background:#eef2f7;overflow:hidden}.mixtrack i{display:block;height:100%;border-radius:6px}
+/* assistant */
+.chatwrap{display:grid;grid-template-columns:.72fr 1.28fr;gap:22px}
+.side h3{font-family:"Poppins";font-size:16px;color:var(--navy);margin-bottom:6px}
+.side p{color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5}
+.sug{display:block;width:100%;text-align:left;background:#eef9fb;border:1px solid #d3ebef;color:#0c5461;padding:12px 14px;border-radius:11px;font-size:13.5px;margin-bottom:9px;cursor:pointer;font-family:inherit}
+.sug:hover{background:#e4f3f7}
+.chat{display:flex;flex-direction:column;gap:16px;background:#fbfdff;border:1px solid var(--line);border-radius:14px;padding:20px;min-height:280px;max-height:460px;overflow-y:auto;margin-bottom:14px}
+.msg{display:flex;gap:11px;max-width:82%}
+.msg .b{padding:13px 16px;border-radius:15px;font-size:14.5px;line-height:1.55}
+.msg.a .b{background:#fff;border:1px solid var(--line);color:#28374a;border-top-left-radius:4px}
+.msg.u{align-self:flex-end;flex-direction:row-reverse}
+.msg.u .b{background:linear-gradient(135deg,var(--blue),#15a3bd);color:#fff;border-top-right-radius:4px}
+.msg .av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.msg.a .av{background:#e6f4f7;color:var(--blue)}.msg.u .av{background:#0e7490;color:#fff}
+/* devices */
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.type{border:1.5px solid var(--line);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}
+.type.on{border-color:var(--blue);background:#eef9fb}
+.type .ic{color:var(--blue)}.type .ic svg{width:26px;height:26px}
+.type .nm{font-size:13px;font-weight:600;color:#33475f;margin-top:6px}
+.dev{display:flex;align-items:center;gap:14px;padding:14px 15px;border:1px solid var(--line);border-radius:14px;margin-bottom:11px}
+.dev .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.dev .ic svg{width:21px;height:21px}
+.dev .body{flex:1}.dev h4{font-family:"Poppins";font-size:15px;color:var(--navy)}.dev small{color:var(--muted);font-size:13px}
+.tog{width:44px;height:26px;border-radius:20px;background:#22c55e;position:relative;flex-shrink:0}
+.tog::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;right:3px}
+.tog.off{background:#cbd5e1}.tog.off::after{left:3px;right:auto}
+/* settings */
+.set{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--line)}
+.set:last-child{border:none}
+.set .ic{width:42px;height:42px;border-radius:11px;background:#e6f4f7;color:var(--blue);display:flex;align-items:center;justify-content:center}
+.set .ic svg{width:20px;height:20px}
+.set .body{flex:1}.set h4{font-family:"Poppins";font-size:15px;color:var(--navy)}.set small{color:var(--muted);font-size:13px}
+.prof{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.prof .av{width:60px;height:60px;border-radius:15px;background:linear-gradient(135deg,#0e7490,#2aa7c1);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Poppins";font-weight:700;font-size:26px}
+.prof b{font-family:"Poppins";font-size:18px;color:var(--navy)}.prof small{color:var(--muted);font-size:13px}
+.field{margin-bottom:14px;max-width:360px}
+.field label{display:block;margin-bottom:6px}.field input{width:100%}
+.danger{background:#fdeee9;color:#c2410c;border:1px solid #f3c9c9;padding:10px 16px;border-radius:11px;font-weight:600;cursor:pointer;font-family:inherit;font-size:14px}
 /* footer */
-footer{background:#0a2833;color:#a9cdd6;}
-footer .fwrap{max-width:1040px;margin:0 auto;padding:34px 26px 8px;display:flex;gap:44px;flex-wrap:wrap;}
-footer .fcol{max-width:290px;}
-footer .fbrand{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
-footer .fbrand .logo{width:30px;height:30px;background:linear-gradient(160deg,#ffcb47,#f59e0b);border-radius:9px;display:flex;align-items:center;justify-content:center;}
-footer .fbrand b{color:#fff;font-size:16px;font-weight:800;}
-footer h3{color:#fff;font-size:12px;margin-bottom:9px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;}
-footer p{font-size:13px;line-height:1.65;}footer a{color:#7fd0e0;text-decoration:none;display:block;margin-bottom:5px;font-size:13px;cursor:pointer;}
-.credit{border-top:1px solid #163b47;}.credit .cin{max-width:1040px;margin:0 auto;padding:14px 26px;font-size:12.5px;color:#8fb6c1;text-align:center;}
+.info{background:#0d3a49;color:#fff}
+.info .wrap{display:flex;gap:12px;padding:24px 28px;flex-wrap:wrap}
+.info .cell{flex:1;min-width:220px;display:flex;align-items:center;gap:14px;padding:6px 18px;border-right:1px solid rgba(255,255,255,.12)}
+.info .cell:last-child{border:none}
+.info .ic{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:var(--amber)}
+.info .ic svg{width:19px;height:19px}
+.info small{color:#9fb6d6;display:block;font-size:12px}.info b{font-size:15px}
+.footer{background:var(--navy);color:#b9c8de}
+.news{display:flex;gap:8px;margin-top:10px;max-width:300px}
+.news input{flex:1;padding:10px 12px;border-radius:9px;border:1px solid #2a4a5c;background:#0f2f3d;color:#e6eef5;font-size:13px}
+.news button{padding:10px 14px;border:none;border-radius:9px;background:var(--blue2);color:#04222c;font-weight:700;font-size:13px;cursor:pointer}
+.news button:hover{background:#3bb6cf}
+.newsmsg{font-size:12.5px;margin-top:8px;min-height:16px}
+.footer .wrap{display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:40px;padding:44px 28px 28px}
+.footer h4{color:#fff;font-size:16px;margin-bottom:14px}
+.footer p{font-size:14px;line-height:1.7;color:#9fb2ce}
+.footer .fb{display:flex;align-items:center;gap:9px;color:#fff;font-size:20px;font-weight:800;font-family:"Poppins";margin-bottom:12px}
+.footer .fb .bolt{width:30px;height:30px;background:linear-gradient(135deg,#f7b955,#f59e0b);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.footer .fb .bolt svg{width:16px;height:16px}
+.footer .fb .v{color:var(--blue2)}
+.footer a{display:block;color:#9fb2ce;text-decoration:none;font-size:14px;margin-bottom:9px}
+.footer a:hover{color:var(--amber)}
+.copy{background:#083039;color:#8ea6c6;text-align:center;padding:15px;font-size:13px}
+.copy b{color:var(--amber)}
 /* login */
-.login{position:fixed;inset:0;background:linear-gradient(135deg,#0a3a44,#0e7490 70%,#12a3b8);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;}
-.login .box{background:#fff;border-radius:20px;padding:32px 30px;width:100%;max-width:390px;box-shadow:0 20px 50px rgba(0,0,0,.25);}
-.login .lb{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:6px;}
-.login .lb .logo{width:40px;height:40px;background:linear-gradient(160deg,#ffcb47,#f59e0b);border-radius:12px;display:flex;align-items:center;justify-content:center;}
-.login .lb b{font-size:22px;font-weight:800;color:#0f2231;}
-.login .h{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px;}
-.login .seg{display:flex;background:#f1f5f9;border-radius:11px;padding:4px;margin-bottom:18px;}
-.login .seg button{flex:1;border:none;background:none;padding:9px;border-radius:8px;font-weight:700;font-size:13.5px;cursor:pointer;color:#64748b;font-family:inherit;}
-.login .seg button.on{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08);}
-.login input{width:100%;margin-bottom:12px;padding:12px 14px;}
-.login .btn{width:100%;justify-content:center;padding:12px;}
-.login .err{color:var(--red);font-size:13px;margin-bottom:10px;min-height:16px;text-align:center;}
-.login .skip{text-align:center;margin-top:14px;}.login .skip a{color:var(--primary);font-size:12.5px;cursor:pointer;text-decoration:underline;}
-.ordiv{display:flex;align-items:center;gap:12px;margin:16px 0;color:#94a3b8;font-size:12px;}
-.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:#e5eaf0;}
-.social{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border-radius:11px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:10px;border:1.5px solid #dfe6ee;background:#fff;color:#243240;transition:.15s;}
-.social:hover{background:#f6f9fc;border-color:#c7d3df;}
-.social svg{width:19px;height:19px;}
-.social.apple{background:#000;color:#fff;border-color:#000;}.social.apple:hover{background:#1a1a1a;}
+.login{position:fixed;inset:0;background:radial-gradient(1100px 600px at 50% -10%,#e9f6fb 0%,#f4f8fd 45%,#eef7fb 100%);display:flex;flex-direction:column;z-index:100}
+.login .lbar{display:flex;align-items:center;justify-content:space-between;padding:22px 40px}
+.login .brand{font-size:22px}
+.login .toggle{font-size:14px;color:var(--muted)}.login .toggle a{color:var(--blue);font-weight:700;text-decoration:none;margin-left:6px}
+.login .center{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 20px 50px}
+.card{width:460px;max-width:100%;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(14,42,79,.12);padding:40px 40px}
+.card .top{text-align:center;margin-bottom:24px}
+.card .top .bolt{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#f7b955,#f59e0b);display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-bottom:12px}
+.card .top .bolt svg{width:28px;height:28px}
+.card h2{font-family:"Poppins";font-size:24px;color:var(--navy)}.card .csub{color:var(--muted);font-size:14px;margin-top:5px}
+.lerr{color:#dc2626;font-size:13px;min-height:16px;text-align:center;margin-bottom:6px}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:13px}
+.divider div{flex:1;height:1px;background:var(--line)}
+.socbtns{display:flex;gap:10px}
+.socbtns button{flex:1;height:46px;border-radius:11px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;color:#33475f;font-size:14px;cursor:pointer;background:#fff;font-family:inherit}
+.socbtns button:hover{background:#f7faff}.socbtns svg{width:19px;height:19px}
+.foot{text-align:center;margin-top:18px;font-size:14px;color:var(--muted)}.foot a{color:var(--blue);font-weight:700;text-decoration:none}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #cfe0e6;border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.feat{grid-template-columns:1fr}.herobox,.chatwrap,.grid2{grid-template-columns:1fr!important}.nav{display:none}}
+.grid2{display:grid;gap:22px}
+/* dark mode */
+body.dark{--bg:#0a1b24;--ink:#e6eef5;--line:#1c3a47;--muted:#8fa6b5}
+body.dark .panel,body.dark .kpi,body.dark .fcard,body.dark .slot,body.dark .dev,body.dark .type{background:#0f2833;border-color:#1c3a47}
+body.dark .panel h2,body.dark .kpi .v,body.dark .fcard h3,body.dark .slot h4,body.dark .dev h4,body.dark .prof b{color:#e6eef5}
+body.dark input,body.dark select{background:#0b2029;border-color:#244a58;color:#e6eef5}
+body.dark td{color:#c2d2db;border-color:#183440}body.dark tr:hover td{background:#122d38}
+body.dark .header{background:#0f2833;border-color:#1c3a47}body.dark .nav>a,body.dark .nav .morelink{color:#b8ccd6}
+body.dark .chat{background:#0b2029;border-color:#1c3a47}body.dark .msg.a .b{background:#12303c;color:#e6eef5;border-color:#1c3a47}
+body.dark .sug{background:#0e2b35;border-color:#1c4653;color:#7fd4e0}
+body.dark .icirc{background:#12303c}body.dark .uinfo b{color:#e6eef5}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN / SIGNUP (prototype minimal card) -->
 <div class="login" id="loginView">
-  <div class="box">
-    <div class="lb"><div class="logo"><svg class="i" viewBox="0 0 24 24" fill="#0a3a44"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div><b>SmartVolt</b></div>
-    <div class="h">Smart electricity saver for Spain</div>
-    <div class="seg"><button id="segLogin" class="on" onclick="segMode('login')">Log in</button><button id="segSignup" onclick="segMode('signup')">Sign up</button></div>
-    <div class="err" id="loginErr"></div>
-    <input type="text" id="lUser" placeholder="Username" autocomplete="username">
-    <div style="position:relative">
-      <input type="password" id="lPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()" style="width:100%;padding-right:44px">
-      <span id="pwEye" onclick="togglePw()" title="Show password" style="position:absolute;right:14px;top:21px;transform:translateY(-50%);cursor:pointer;color:#94a3b8;display:flex"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+  <div class="lbar">
+    <div class="brand"><span class="bolt" style="width:34px;height:34px;background:linear-gradient(135deg,#f7b955,#f59e0b);border-radius:9px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="#fff" style="width:19px"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></span>Smart<span class="v">Volt</span></div>
+    <div class="toggle"><span id="togglePre">New to SmartVolt?</span> <a onclick="toggleMode()" id="toggleLink">Sign Up</a></div>
+  </div>
+  <div class="center">
+    <div class="card">
+      <div class="top"><div class="bolt"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div><h2 id="authTitle">Welcome back</h2><div class="csub" id="authSub">Sign in to see today's forecast and your plan.</div></div>
+      <div class="lerr" id="loginErr"></div>
+      <div class="field" id="fldName" style="display:none"><label>Full Name</label><input type="text" id="lName" placeholder="Your full name"></div>
+      <div class="field"><label>Username</label><input type="text" id="lUser" placeholder="Your username" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="lPass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <button class="btn" id="authBtn" style="width:100%;justify-content:center" onclick="doAuth()">Sign In</button>
+      <div class="divider"><div></div><span id="orText">or continue with</span><div></div></div>
+      <div class="socbtns">
+        <button onclick="socialLogin('Google')"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google</button>
+        <button onclick="socialLogin('Apple')"><svg viewBox="0 0 384 512" fill="#111"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9z"/></svg>Apple</button>
+      </div>
+      <div class="foot" id="guestFoot"><a onclick="guest()">Continue as guest</a></div>
+      <div class="foot" style="margin-top:8px"><span id="switchPre">New here?</span> <a onclick="toggleMode()" id="switchLink">Create an account</a></div>
     </div>
-    <button class="btn" id="authBtn" onclick="doAuth()">Log in</button>
-    <div class="ordiv">or</div>
-    <button class="social" onclick="socialLogin('Google')"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>Continue with Google</button>
-    <button class="social apple" onclick="socialLogin('Apple')"><svg viewBox="0 0 24 24" fill="#fff"><path d="M16.36 12.9c.02 2.6 2.28 3.46 2.3 3.47-.02.06-.36 1.24-1.19 2.46-.72 1.06-1.47 2.11-2.65 2.13-1.16.02-1.53-.69-2.86-.69-1.32 0-1.74.67-2.83.71-1.14.04-2-.15-2.73-2.05C4.16 17.8 3.3 14.25 4.5 11.6c.6-1.32 1.66-2.16 2.86-2.18 1.11-.02 2.17.75 2.85.75.68 0 1.96-.93 3.3-.79.56.02 2.14.23 3.15 1.7-.08.05-1.88 1.1-1.87 3.28M14.2 7.34c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.55 1.3-.56.65-1.05 1.68-.92 2.67.97.08 1.96-.49 2.57-1.21"/></svg>Continue with Apple</button>
-    <div class="skip"><a onclick="guest()">Continue as guest</a></div>
   </div>
 </div>
 
 <!-- APP -->
-<div class="app hidden" id="appRoot">
-<header class="top">
-  <div class="brand"><div class="logo"><svg class="i" viewBox="0 0 24 24" fill="#0a3a44"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div><div><h1>SmartVolt</h1><div class="tag">Smart electricity saver &middot; Spain</div></div></div>
-  <div class="hnav">
-    <nav class="nav" id="nav"></nav>
-    <div class="userbox"><span class="who" id="who"></span><button class="iconbtn" id="themeBtn" title="Dark mode" onclick="toggleTheme()"></button><button class="iconbtn" id="setBtn" title="Settings" onclick="openSettings()"></button><button class="logout" onclick="logout()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Log out</button></div>
+<div id="appRoot" class="hidden">
+<div class="header"><div class="wrap">
+  <div class="brand" onclick="go('home')"><span class="bolt"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></span>Smart<span class="v">Volt</span></div>
+  <div class="nav" id="nav"></div>
+  <div class="hright">
+    <span class="icirc" title="Dark mode" id="themeBtn" onclick="toggleTheme()"></span>
+    <div class="userchip" onclick="go('settings')"><span class="uav" id="uav">G</span><div class="uinfo"><b id="uname">Guest</b><small>My account</small></div></div>
+    <button class="logout" onclick="logout()">Log out</button>
   </div>
-</header>
-<div class="wrap">
-  <div id="plan" class="view">
-    <div class="hero">
-      <div class="htext">
-        <h2>Cut your electricity bill, automatically.</h2>
-        <p>SmartVolt forecasts tomorrow's prices with a deep-learning model, then tells you the cheapest hours to run your appliances, charge your EV and use your battery.</p>
-        <div class="stats">
-          <div class="stat"><b>~92%</b><span>forecast accuracy</span></div>
-          <div class="stat"><b>24 h</b><span>ahead, hour by hour</span></div>
-          <div class="stat"><b>100%</b><span>free to use</span></div>
-        </div>
-      </div>
-      <div class="hart">
-        <svg viewBox="0 0 260 210" xmlns="http://www.w3.org/2000/svg" fill="none">
-          <circle cx="205" cy="46" r="26" fill="#ffd27a" opacity="0.95"/>
-          <g stroke="#ffd27a" stroke-width="3" stroke-linecap="round" opacity="0.8">
-            <line x1="205" y1="6" x2="205" y2="14"/><line x1="243" y1="46" x2="235" y2="46"/>
-            <line x1="232" y1="19" x2="227" y2="24"/><line x1="232" y1="73" x2="227" y2="68"/>
-          </g>
-          <rect x="24" y="150" width="212" height="42" rx="10" fill="#ffffff" opacity="0.10"/>
-          <!-- house -->
-          <path d="M56 118 L104 84 L152 118 Z" fill="#ffd27a"/>
-          <rect x="66" y="118" width="76" height="56" rx="4" fill="#ffffff"/>
-          <rect x="78" y="132" width="20" height="20" rx="2" fill="#0e7490"/>
-          <rect x="110" y="132" width="20" height="42" rx="2" fill="#0a3a44"/>
-          <!-- solar panel on roof -->
-          <g transform="rotate(-35 104 96)"><rect x="86" y="88" width="36" height="18" rx="2" fill="#0a3a44"/><line x1="98" y1="88" x2="98" y2="106" stroke="#2a6b7a" stroke-width="1.4"/><line x1="110" y1="88" x2="110" y2="106" stroke="#2a6b7a" stroke-width="1.4"/><line x1="86" y1="97" x2="122" y2="97" stroke="#2a6b7a" stroke-width="1.4"/></g>
-          <!-- battery -->
-          <rect x="164" y="132" width="34" height="42" rx="5" fill="#ffffff"/><rect x="176" y="127" width="10" height="6" rx="2" fill="#ffffff"/>
-          <rect x="168" y="152" width="26" height="18" rx="2" fill="#16a34a"/>
-          <path d="M182 137 l-6 11 h5 l-1 8 8 -12 h-5 l1 -7Z" fill="#16a34a"/>
-          <!-- price chart line -->
-          <polyline points="30,86 54,70 78,92 102,58 126,74 150,44 174,60 198,34 222,50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
-          <g fill="#ffd27a"><circle cx="102" cy="58" r="3.5"/><circle cx="198" cy="34" r="3.5"/></g>
-        </svg>
-      </div>
-    </div>
-    <div class="card"><h2><span class="ic" id="ic-plan"></span>Your money-saving plan</h2>
-      <div class="sub">Pick your day and what you use. SmartVolt forecasts the prices and tells you the best time to run each thing to save money.</div>
-      <div class="row"><label>Day</label><input type="date" id="pdate"><button class="btn" id="pBtn">Get My Plan</button></div>
-      <div class="grey" id="pRange"></div>
-      <div class="apps" id="appList"></div>
-      <div class="row" style="margin-top:12px;gap:8px"><button class="btn ghost" id="addDevBtn" onclick="toggleAddDev()">+ Add your own device</button></div>
-      <div id="addDevForm" class="hidden" style="margin-top:10px;background:#f6f9fc;border:1px solid var(--line);border-radius:12px;padding:14px 16px">
-        <div class="row" style="gap:10px">
-          <input type="text" id="cdName" placeholder="Device name (e.g. Pool pump)" style="flex:2;min-width:150px">
-          <input type="number" id="cdKw" placeholder="Power kW" step="0.1" min="0.1" style="flex:1;min-width:90px">
-          <input type="number" id="cdHrs" placeholder="Hours/day" min="1" max="12" style="flex:1;min-width:90px">
-          <button class="btn" onclick="addDevice()">Add</button>
-        </div>
-        <div class="grey" style="margin-top:8px">Tip: a washing machine is about 1 kW for 2 hours; an EV charger about 7 kW for 6 hours.</div>
-      </div>
-    </div>
-    <div id="planOut"></div>
-  </div>
-  <div id="assistant" class="view hidden">
-    <div class="card"><h2><span class="ic" id="ic-ai"></span>AI Assistant</h2>
-      <div class="sub">Ask about tomorrow's prices and the best time to use electricity. Powered by the SmartVolt agents.</div>
-      <div class="chips"><button onclick="ask('When should I charge my EV?')">When should I charge my EV?</button><button onclick="ask('When is the cheapest time to do laundry?')">Cheapest time for laundry?</button><button onclick="ask('Is tomorrow an expensive day?')">Is tomorrow expensive?</button></div>
-      <div class="chat" id="chatBox"></div>
-      <div class="row" style="margin-top:12px"><input type="text" id="chatIn" placeholder="Ask a question..." style="flex:1" onkeydown="if(event.key==='Enter')send()"><button class="btn" onclick="send()">Send</button></div>
-    </div>
-  </div>
-  <div id="forecast" class="view hidden">
-    <div class="card"><h2><span class="ic" id="ic-fc"></span>Day-ahead price forecast</h2>
-      <div class="sub" style="margin-top:0">The model was trained on real Spanish market data. Pick a day inside that data — because it is a past day, we show the model's prediction next to the real price, so you can see how accurate it was.</div>
-      <div class="row"><label>Day</label><input type="date" id="fdate"><button class="btn" id="fBtn">Get Forecast</button><button class="btn ghost" id="fExport">Download CSV</button></div>
-      <div class="grey" id="fRange"></div></div>
-    <div class="card" id="uploadCard"><h2><span class="ic" id="ic-up"></span>Use your own dataset (optional)</h2>
-      <div class="sub" style="margin-top:0">Have your own Spanish market data? Upload an <b>energy</b> CSV and a <b>weather</b> CSV in the same format as the original dataset. SmartVolt cleans, merges and forecasts on them automatically — no coding needed.</div>
-      <div class="row" style="gap:14px;align-items:flex-end;flex-wrap:wrap">
-        <div><label style="display:block;margin-bottom:5px">Energy CSV</label><input type="file" id="upEnergy" accept=".csv"></div>
-        <div><label style="display:block;margin-bottom:5px">Weather CSV</label><input type="file" id="upWeather" accept=".csv"></div>
-        <button class="btn" id="upBtn" onclick="uploadData()">Upload &amp; Load</button>
-      </div>
-      <div class="grey" id="upStatus" style="margin-top:10px"></div></div>
-    <div id="fOverview"></div><div id="falert"></div>
-    <div class="card"><h2><span class="ic" id="ic-bolt"></span>Predicted vs actual price with 95% risk band (EUR/MWh)</h2><div id="chart"></div><div class="grey">Actual price shows for past days so you can see how close the forecast was.</div></div>
-    <div class="card"><h2><span class="ic" id="ic-tab"></span>Hourly values</h2><div id="ftable"></div></div>
-  </div>
-  <div id="performance" class="view hidden"></div>
-  <div id="history" class="view hidden"></div>
-  <div id="about" class="view hidden">
-    <div class="card"><h2><span class="ic" id="ic-info"></span>About SmartVolt</h2><p class="prose">SmartVolt forecasts day-ahead electricity prices for the Spanish market with an N-BEATSx deep learning model, then a team of AI agents turns the forecast into simple money-saving advice: the best time to run your appliances, charge your car, and use your battery.</p></div>
-    <div class="card"><h2><span class="ic" id="ic-ai2"></span>How the AI agents work</h2><p class="prose">A <b>Supervisor agent</b> coordinates the team. A <b>Forecast agent</b> runs the N-BEATSx model to predict the next 24 hours of prices with a risk band. A <b>Recommendation agent</b> turns the forecast into the cheapest times to use electricity and the money saved. An <b>Explanation agent</b> explains it in plain words and answers your questions.</p></div>
-    <div class="card"><h2><span class="ic" id="ic-warn"></span>Important</h2><p class="prose">SmartVolt is built for the Spanish market, because the model is trained on Spanish data. The advice is an estimate to help you save money, not financial advice, and no real trades are made on your behalf.</p></div>
-  </div>
-  <div id="settings" class="view hidden">
-    <div class="card"><h2><span class="ic" id="ic-set"></span>Account &amp; settings</h2>
-      <div id="profileRow" style="display:flex;align-items:center;gap:14px;padding:6px 0 14px;border-bottom:1px solid var(--line);margin-bottom:14px">
-        <div id="avatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#0e7490,#0a3a44);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px"></div>
-        <div><div id="profName" style="font-weight:800;font-size:16px;color:var(--ink)"></div><div id="profSub" class="grey" style="margin:2px 0 0"></div></div>
-      </div>
-      <div class="sub" id="setWho" style="margin-top:0">Manage your account, notifications and appearance.</div>
-      <span class="setlbl">Appearance</span>
-      <div class="row"><label style="flex:1">Dark mode</label><button class="btn ghost" id="setTheme" onclick="toggleTheme()">Turn on</button></div>
-      <span class="setlbl">Price alerts</span>
-      <div class="sub" style="margin:0 0 8px">Get a browser notification the evening before, telling you the cheapest hours for tomorrow.</div>
-      <div class="row"><label style="flex:1">Cheap-hour alerts</label><button class="btn ghost" id="setAlerts" onclick="toggleAlerts()">Turn on</button></div>
-    </div>
-    <div class="card" id="setAccount"><h2><span class="ic" id="ic-lock"></span>Change password</h2>
-      <div class="err" id="pwErr" style="color:var(--red);font-size:13px;min-height:16px"></div>
-      <div class="row" style="flex-direction:column;align-items:stretch;max-width:340px">
-        <input type="password" id="pwOld" placeholder="Current password">
-        <input type="password" id="pwNew" placeholder="New password (4+ characters)">
-        <button class="btn" onclick="changePw()">Update password</button>
-      </div>
-    </div>
-    <div class="card"><h2><span class="ic" id="ic-trash"></span>Delete account</h2>
-      <p class="prose" style="margin-bottom:14px">This permanently removes your account and saved appliances. This cannot be undone.</p>
-      <button class="danger" onclick="deleteAccount()">Delete my account</button>
-    </div>
-  </div>
-</div>
+</div></div>
+<div class="banner" id="banner"><div class="wrap"><h1 id="bTitle"></h1><div class="crumb">Home &nbsp;/&nbsp; <b id="bCrumb"></b></div></div></div>
 
-<!-- ONBOARDING -->
-<div class="modal hidden" id="welcome">
-  <div class="m">
-    <h3>Welcome to SmartVolt ⚡</h3>
-    <p>SmartVolt forecasts tomorrow's electricity prices for Spain, then tells you the cheapest times to run your appliances, charge your EV and use your battery — so you save money.</p>
-    <p>Here's how to start:</p>
-    <p style="color:var(--ink)"><b>1.</b> Pick your day and tick the things you use.<br><b>2.</b> Press <b>Get My Plan</b>.<br><b>3.</b> Follow the best times we suggest.</p>
-    <button class="btn" style="width:100%;justify-content:center;margin-top:8px" onclick="closeWelcome()">Get started</button>
-  </div>
-</div>
-<footer>
-  <div class="fwrap">
-    <div class="fcol"><div class="fbrand"><div class="logo"><svg class="i" viewBox="0 0 24 24" fill="#0a3a44"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></div><b>SmartVolt</b></div><p>Day-ahead electricity price forecasting for Spain, powered by an N-BEATSx deep learning model and a team of AI agents.</p></div>
-    <div class="fcol"><h3>Product</h3><a onclick="go('plan')">Smart Plan</a><a onclick="go('assistant')">AI Assistant</a><a onclick="go('forecast')">Forecast</a><a onclick="go('performance')">Model Performance</a></div>
-    <div class="fcol"><h3>How it works</h3><p>Forecast tomorrow's prices &rarr; find the cheapest hours &rarr; advice on when to run appliances, charge the EV, and use the battery.</p></div>
-    <div class="fcol"><h3>Disclaimer</h3><p>For the Spanish market only. Estimates to help you save, not financial advice. No real trades are made.</p></div>
-  </div>
-  <div class="credit"><div class="cin">&copy; 2026 SmartVolt &middot; Built for the Spanish electricity market</div></div>
-</footer>
+<div class="page"><div class="wrap">
+  <div id="v-home" class="view"></div>
+  <div id="v-forecast" class="view hidden"></div>
+  <div id="v-plan" class="view hidden"></div>
+  <div id="v-savings" class="view hidden"></div>
+  <div id="v-green" class="view hidden"></div>
+  <div id="v-assistant" class="view hidden"></div>
+  <div id="v-accuracy" class="view hidden"></div>
+  <div id="v-devices" class="view hidden"></div>
+  <div id="v-settings" class="view hidden"></div>
+  <div id="v-about" class="view hidden"></div>
+  <div id="v-help" class="view hidden"></div>
+</div></div>
+
+<div class="info"><div class="wrap">
+  <div class="cell"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><div><small>Coverage</small><b>Spain &middot; Day-Ahead Market</b></div></div>
+  <div class="cell"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg></div><div><small>Phone</small><b>(00) 800 SMART-VOLT</b></div></div>
+  <div class="cell"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></div><div><small>Email</small><b>support@smartvolt.app</b></div></div>
+</div></div>
+<div class="footer"><div class="wrap">
+  <div><div class="fb"><span class="bolt"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg></span>Smart<span class="v">Volt</span></div><p>SmartVolt forecasts day-ahead electricity prices for Spain and turns them into simple, money-saving advice for your home.</p></div>
+  <div><h4>Company</h4><a onclick="go('about')">About</a><a onclick="go('help')">Help &amp; FAQ</a></div>
+  <div><h4>Newsletter</h4><p>Get weekly saving tips and price alerts in your inbox.</p>
+    <div class="news"><input type="email" id="newsEmail" placeholder="you@email.com"><button onclick="subscribe()">Subscribe</button></div>
+    <div id="newsMsg" class="newsmsg"></div></div>
+</div></div>
+<div class="copy">Copyright &copy; 2026 <b>SmartVolt</b> &nbsp;|&nbsp; Smarter energy for every home</div>
 </div>
 
 <script>
-// ---- icons ----
-const S='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
+const $=id=>document.getElementById(id);
+const DAY="2018-06-15";
+let TOKEN=null, USERNAME="Guest", PREFS={}, DMIN="2015-01-01", DMAX="2018-12-31", curDay=DAY, curSource="builtin";
+
+// ---- SVG icons ----
+const S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
 const IC={
- plan:S+'<rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="11" width="18" height="9" rx="1"/></svg>',
- ai:S+'<path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg>',
- fc:S+'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
- perf:S+'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
- hist:S+'<circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/></svg>',
- info:S+'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.7" fill="currentColor" stroke="none"/></svg>',
- bolt:S+'<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>',
- tab:S+'<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/></svg>',
- bar:S+'<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="15"/></svg>',
- clock:S+'<circle cx="12" cy="12" r="8"/><polyline points="12 8 12 12 15 14"/></svg>',
- batt:S+'<rect x="3" y="8" width="16" height="9" rx="2"/><line x1="21" y1="11" x2="21" y2="14"/></svg>',
+ chart:S+'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
  bulb:S+'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3 11v2h6v-2a6 6 0 0 0-3-11Z"/></svg>',
- team:S+'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6"/><path d="M17.5 20a6 6 0 0 0-2-4.4"/></svg>',
- warn:S+'<path d="M12 3 2 20h20L12 3Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r="0.7" fill="currentColor" stroke="none"/></svg>',
- washing_machine:S+'<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><circle cx="8" cy="6" r="0.7" fill="currentColor" stroke="none"/></svg>',
- dishwasher:S+'<rect x="5" y="3" width="14" height="18" rx="2"/><line x1="5" y1="8" x2="19" y2="8"/><line x1="9" y1="12" x2="9" y2="17"/><line x1="13" y1="12" x2="13" y2="17"/></svg>',
- dryer:S+'<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M10 13a2 2 0 0 1 4 0"/></svg>',
- water_heater:S+'<path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z"/></svg>',
- ev:S+'<path d="M9 3v5"/><path d="M15 3v5"/><path d="M7 8h10v2a5 5 0 0 1-10 0Z"/><path d="M12 15v6"/></svg>',
- air_conditioner:S+'<path d="M4 9h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M4 15h13a2.5 2.5 0 1 1-2.5 2.5"/><line x1="4" y1="12" x2="10" y2="12"/></svg>',
- gear:S+'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>',
+ coin:S+'<circle cx="12" cy="12" r="9"/><path d="M15 9a3 3 0 0 0-3-2c-1.7 0-3 1-3 2.3 0 3 6 1.7 6 4.7 0 1.3-1.3 2.3-3 2.3a3 3 0 0 1-3-2"/></svg>',
+ leaf:S+'<path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10 0 9-4 16-9 16Z"/><path d="M4 20c3-4 7-6 11-7"/></svg>',
+ robot:S+'<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></svg>',
+ target:S+'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>',
+ plug:S+'<path d="M9 3v6"/><path d="M15 3v6"/><path d="M7 9h10v3a5 5 0 0 1-10 0Z"/><path d="M12 17v4"/></svg>',
+ sun:S+'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>',
+ clock:S+'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>',
+ car:S+'<path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><rect x="3" y="13" width="18" height="5" rx="1"/><circle cx="7" cy="18" r="1.4"/><circle cx="17" cy="18" r="1.4"/></svg>',
+ wash:S+'<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><circle cx="8" cy="6.5" r="0.6" fill="currentColor"/></svg>',
+ dish:S+'<rect x="5" y="3" width="14" height="18" rx="2"/><line x1="5" y1="8" x2="19" y2="8"/><line x1="9" y1="12" x2="9" y2="17"/><line x1="13" y1="12" x2="13" y2="17"/></svg>',
+ batt:S+'<rect x="3" y="8" width="16" height="9" rx="2"/><line x1="21" y1="11" x2="21" y2="14"/><path d="M11 10l-1.5 2.5H12l-1.5 2.5"/></svg>',
+ heat:S+'<path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z"/></svg>',
+ ac:S+'<rect x="3" y="5" width="18" height="8" rx="2"/><path d="M7 17v1M12 17v2M17 17v1"/></svg>',
  moon:S+'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
- sun:S+'<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>',
+ sund:S+'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2"/></svg>',
+ bell:S+'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
  lock:S+'<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
- trash:S+'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
- up:S+'<path d="M12 15V4"/><polyline points="8 8 12 4 16 8"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
+ trash:S+'<polyline points="3 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+ user:S+'<circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>',
+ flame:S+'<path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-1.5.5-2.7 1.3-3.7C8.8 9 9 10 10 10.5 10 8 12 5.5 12 3Z"/></svg>',
+ add:S+'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
 };
+const APP_IC={washing_machine:'wash',dishwasher:'dish',dryer:'wash',water_heater:'heat',ev:'car',air_conditioner:'ac'};
 const APPS=[["washing_machine","Washing machine"],["dishwasher","Dishwasher"],["dryer","Tumble dryer"],["water_heater","Water heater"],["ev","EV charging"],["air_conditioner","Air conditioner"]];
 const LABEL=Object.fromEntries(APPS.map(a=>[a[1],a[0]]));
-const NAV=[["plan","Smart Plan","plan"],["assistant","AI Assistant","ai"],["forecast","Forecast","fc"],["performance","Performance","perf"],["history","History","hist"],["about","About","info"]];
+let SELAPPS=['washing_machine','dishwasher','ev','water_heater'];
 
-const DAY="2017-06-15";
-const $=id=>document.getElementById(id);
-let TOKEN=null, lastForecast=null, PREFS={}, CUSTOM=[], USERNAME='Guest';
-
-// friendly 24h -> AM/PM  ("00:00"->"12 AM", "13:00"->"1 PM", "18:30"->"6:30 PM")
-function fmtTime(hhmm){
-  if(!hhmm||hhmm.indexOf(':')<0)return hhmm;
-  let[h,m]=hhmm.split(':').map(Number);
-  const ap=h<12?'AM':'PM';let h12=h%12;if(h12===0)h12=12;
-  return m?`${h12}:${String(m).padStart(2,'0')} ${ap}`:`${h12} ${ap}`;
+// header nav with More dropdown
+const PRIMARY=[["home","Home"],["forecast","Forecast"],["plan","Plan"],["savings","Savings"],["assistant","Assistant"]];
+const MORE=[["green","Greenest Hours"],["accuracy","Accuracy"],["devices","Your Devices"]];
+const CRUMB={forecast:["Price Forecast","Forecast"],plan:["Money-Saving Plan","Plan"],savings:["Savings Tracker","Savings"],green:["Greenest Hours","Greenest Hours"],assistant:["AI Assistant","Assistant"],accuracy:["Accuracy & Track Record","Accuracy"],devices:["Your Devices","Devices"],settings:["Settings","Settings"],about:["About SmartVolt","About"],help:["Help & FAQ","Help"]};
+function buildNav(active){
+  let h=PRIMARY.map(([v,l])=>`<a onclick="go('${v}')" class="${v===active?'active':''}">${l}</a>`).join('');
+  const inMore=MORE.some(m=>m[0]===active);
+  const menu=MORE.map(([v,l])=>`<a onclick="go('${v}')" class="${v===active?'active':''}">${l}</a>`).join('');
+  h+=`<div class="hasmore" id="hasmore"><a class="morelink ${inMore?'active':''}" onclick="toggleMore(event)">More &#9662;</a><div class="moremenu">${menu}</div></div>`;
+  $('nav').innerHTML=h;
 }
-function fmtList(arr){return (arr||[]).map(fmtTime).join(', ');}
+// Click-to-open dropdown (works on desktop AND touch; the old hover version
+// had a gap between the button and the menu, so clicks were being missed).
+function toggleMore(e){e.stopPropagation();const el=$('hasmore');if(el)el.classList.toggle('open');}
+document.addEventListener('click',function(){const el=$('hasmore');if(el)el.classList.remove('open');});
+
+async function api(p){const r=await fetch(p);if(!r.ok)throw new Error((await r.json()).detail||'error');return r.json();}
+async function apiPost(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const d=await r.json();if(!r.ok)throw new Error(d.detail||'error');return d;}
+function fmtTime(t){if(!t||t.indexOf(':')<0)return t;let[h]=t.split(':').map(Number);const ap=h<12?'AM':'PM';let h12=h%12||12;return h12+' '+ap;}
+function esc(s){return (s||'').replace(/</g,'&lt;');}
+function clip(s,n){s=esc(s);return s.length>n?s.slice(0,n).replace(/\s+\S*$/,'')+'…':s;}
+
+// ---- routing ----
+function go(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));
+  $('v-'+v).classList.remove('hidden');
+  if(v==='home'){$('banner').classList.add('hidden');}
+  else{$('banner').classList.remove('hidden');const[t,c]=CRUMB[v];$('bTitle').textContent=t;$('bCrumb').textContent=c;}
+  buildNav(v);
+  window.scrollTo({top:0,behavior:'smooth'});
+  const L={home:renderHome,forecast:renderForecast,plan:renderPlan,savings:renderSavings,green:renderGreen,assistant:renderAssistant,accuracy:renderAccuracy,devices:renderDevices,settings:renderSettings,about:renderAbout,help:renderHelp};
+  if(L[v])L[v]();
+}
+
+// ---- HOME ----
+function renderHome(){
+  const cards=[
+   ['chart','#0e7490,#2aa7c1','Price Forecast','A clear 24-hour price curve with a shaded risk band, so you see not just the expected price but how sure the model is.','forecast','Open Forecast'],
+   ['bulb','#16a34a,#22c55e','Money-Saving Plan','SmartVolt marks the cheapest hours and tells you exactly when to run the washer, charge the EV, or store solar energy.','plan','Make a Plan'],
+   ['coin','#16a34a,#0e7490','Savings Tracker','See how much money you have actually saved over time by following SmartVolt&#39;s plans.','savings','View Savings'],
+   ['leaf','#22c55e,#7bcf5a','Greenest Hours','Find the cleanest, lowest-carbon hours to use power &mdash; so you cut emissions as well as cost.','green','See Green Hours'],
+   ['robot','#7c5cff,#a78bfa','AI Assistant','Ask in plain language &mdash; and get a straight answer based on the live forecast.','assistant','Ask the Assistant'],
+   ['target','#f59e0b,#f7b955','Accuracy &amp; Track Record','See how accurate SmartVolt is, look back at past predictions vs the real price, and how it beats simpler models.','accuracy','View Accuracy'],
+   ['plug','#ef4444,#f87171','Your Devices','Add your EV, battery, or big appliances so your plan is tailored to what you actually own at home.','devices','Add a Device'],
+  ];
+  const fc=cards.map(c=>`<div class="fcard"><div class="fic" style="background:linear-gradient(135deg,${c[1]})">${IC[c[0]]}</div><h3>${c[2]}</h3><p>${c[3]}</p><a onclick="go('${c[4]}')">${c[5]} &rarr;</a></div>`).join('');
+  $('v-home').innerHTML=`
+   <div class="herobox">
+     <div>
+       <h1>Cut your electricity bill, automatically.</h1>
+       <p>SmartVolt forecasts tomorrow&#39;s prices with a deep-learning model, then tells you the cheapest hours to run your appliances, charge your EV, and use your battery.</p>
+       <div class="hcta"><button class="b1" onclick="go('forecast')">See Today&#39;s Forecast &rarr;</button><button class="b2" onclick="go('plan')">Make My Plan</button></div>
+       <div class="hstats"><div class="hstat"><b>~92%</b><small>forecast accuracy</small></div><div class="hstat"><b>24 h</b><small>ahead, hour by hour</small></div><div class="hstat"><b>100%</b><small>free to use</small></div></div>
+     </div>
+     <div class="hillus">
+       <svg viewBox="0 0 400 300"><polyline points="18,150 68,120 108,138 158,82 208,108 258,58 300,62" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" opacity="0.92"/><g fill="#fff"><circle cx="18" cy="150" r="5"/><circle cx="68" cy="120" r="5"/><circle cx="108" cy="138" r="5"/><circle cx="158" cy="82" r="5"/><circle cx="208" cy="108" r="5"/><circle cx="258" cy="58" r="5"/></g><g stroke="#f7b955" stroke-width="5" stroke-linecap="round"><line x1="340" y1="20" x2="340" y2="5"/><line x1="340" y1="85" x2="340" y2="100"/><line x1="307" y1="53" x2="292" y2="53"/><line x1="373" y1="53" x2="388" y2="53"/><line x1="317" y1="30" x2="306" y2="19"/><line x1="363" y1="30" x2="374" y2="19"/><line x1="317" y1="76" x2="306" y2="87"/><line x1="363" y1="76" x2="374" y2="87"/></g><circle cx="340" cy="53" r="23" fill="#f7b955"/><rect x="60" y="200" width="118" height="80" rx="6" fill="#fff"/><polygon points="46,203 119,150 192,203" fill="#f7b955"/><rect x="103" y="238" width="28" height="42" rx="3" fill="#104a5c"/><rect x="72" y="214" width="24" height="24" rx="3" fill="#0e7490"/><rect x="222" y="206" width="82" height="62" rx="11" fill="none" stroke="#f7b955" stroke-width="5"/><rect x="304" y="225" width="9" height="24" rx="3" fill="#f7b955"/><rect x="233" y="217" width="50" height="40" rx="5" fill="#f7b955"/><path d="M260 221 l-15 23 h11 l-3 15 l16 -25 h-12 z" fill="#104a5c"/></svg>
+     </div>
+   </div>
+   <div class="secth"><h2>Everything you need to spend less on power</h2><p>Simple, practical tools &mdash; all driven by one accurate price forecast.</p></div>
+   <div class="feat">${fc}</div>`;
+}
+
+// ---- shared chart ----
+function priceChart(rows){
+  const W=1080,H=320,pl=48,pr=18,pt=18,pb=34,pw=W-pl-pr,ph=H-pt-pb;
+  const prd=rows.map(r=>r.predicted),lo=rows.map(r=>r.lower),up=rows.map(r=>r.upper),ac=rows.map(r=>r.actual).filter(v=>v!=null);
+  const all=prd.concat(lo,up,ac);let mn=Math.floor(Math.min(...all)/10)*10,mx=Math.ceil(Math.max(...all)/10)*10;if(mx===mn)mx=mn+10;
+  const X=i=>pl+i*(pw/(rows.length-1)),Y=v=>pt+(mx-v)/(mx-mn)*ph;
+  const ln=v=>v.map((x,i)=>`${X(i).toFixed(1)},${Y(x).toFixed(1)}`).join(' ');
+  const band=up.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')+' '+lo.map((v,i)=>`${X(rows.length-1-i).toFixed(1)},${Y(lo[rows.length-1-i]).toFixed(1)}`).join(' ');
+  let g='';for(let q=mn;q<=mx;q+=10)g+=`<line x1="${pl}" y1="${Y(q)}" x2="${W-pr}" y2="${Y(q)}" stroke="#eef2f8"/><text x="${pl-8}" y="${Y(q)+4}" font-size="11" fill="#9fb0c4" text-anchor="end">${q}</text>`;
+  let xl='';for(let i=0;i<rows.length;i+=3)xl+=`<text x="${X(i)}" y="${H-12}" font-size="11" fill="#9fb0c4" text-anchor="middle">${rows[i].time}</text>`;
+  const ha=ac.length>0;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%">${g}<polygon points="${band}" fill="#0e7490" opacity="0.12"/>${ha?`<polyline points="${ln(rows.map(r=>r.actual))}" fill="none" stroke="#94a3b8" stroke-width="2.4" stroke-dasharray="6 4"/>`:''}<polyline points="${ln(prd)}" fill="none" stroke="#0e7490" stroke-width="3"/>${xl}</svg>`;
+}
+
+// ---- FORECAST ----
+async function renderForecast(){
+  const isUser=curSource==='user';
+  $('v-forecast').innerHTML=`
+   <div class="panel"><div class="ph"><h2>Day-Ahead Price Forecast</h2><span class="srcbadge ${isUser?'user':'demo'}" id="srcBadge">${isUser?'Your uploaded data':'Built-in Spain demo'}</span></div>
+     <div class="sub">Forecast day-ahead electricity prices with the trained N-BEATSx model. Use the built-in Spanish dataset, or upload your own market data in the same format to forecast on it &mdash; for a grid operator or analyst running their own numbers. For a day whose real price is known, we show the prediction next to the actual so you can see the accuracy.</div>
+     <div class="seg" id="srcSeg">
+       <button id="segDemo" class="${isUser?'':'on'}" onclick="setSource('builtin')">Built-in Spain demo</button>
+       <button id="segUp" class="${isUser?'on':''}" onclick="setSource('user')">Upload my market data</button>
+     </div>
+     <div id="srcUpload" class="upbox ${isUser?'':'hidden'}">
+       <div class="upgrid">
+         <div class="f"><label>&#9889; Energy market CSV</label><input type="file" id="fEnergy" accept=".csv"></div>
+         <div class="f"><label>&#127782; Weather CSV</label><input type="file" id="fWeather" accept=".csv"></div>
+       </div>
+       <button class="btn" id="upBtn" onclick="doUpload()">Upload &amp; Clean</button>
+       <div class="hint">Two CSVs in the Spanish-market schema (same columns as <b>energy_dataset.csv</b> and <b>weather_features.csv</b>). The app auto-cleans and merges them &mdash; drops dead columns, fixes outliers, converts temperature, aligns both files by hour &mdash; then forecasts. If a file&#39;s missing a needed column it tells you exactly which one, instead of inventing a result.</div>
+       <div class="upstat" id="upStat"></div>
+     </div>
+     <div class="row" style="margin-top:18px"><label>Day</label><input type="date" id="fdate" min="${DMIN}" max="${DMAX}" value="${curDay}"><button class="btn" id="fBtn" onclick="loadForecast()">Get Forecast</button><button class="btn ghost" onclick="exportFc()">Download CSV</button></div>
+     <div class="grey" id="fRange">Forecasts cover ${DMIN} to ${DMAX}.</div>
+   </div>
+   <div id="fBody"></div>`;
+  loadForecast();
+}
+function applyRange(){
+  const inp=$('fdate');if(inp){inp.min=DMIN;inp.max=DMAX;inp.value=curDay;}
+  const rg=$('fRange');if(rg)rg.textContent=`Forecasts cover ${DMIN} to ${DMAX}.`;
+}
+function setSource(mode){
+  const d=$('segDemo'),u=$('segUp');if(d)d.classList.toggle('on',mode==='builtin');if(u)u.classList.toggle('on',mode==='user');
+  const box=$('srcUpload');if(box)box.classList.toggle('hidden',mode!=='user');
+  if(mode==='builtin'&&curSource==='user')useBuiltin();
+}
+async function doUpload(){
+  const e=$('fEnergy').files[0],w=$('fWeather').files[0],st=$('upStat');
+  if(!e||!w){st.className='upstat bad';st.textContent='Please choose both an Energy CSV and a Weather CSV.';return;}
+  const btn=$('upBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Cleaning &amp; forecasting...';st.className='upstat';st.textContent='';
+  try{
+    const fd=new FormData();fd.append('energy',e);fd.append('weather',w);
+    const r=await fetch('/api/upload',{method:'POST',body:fd});const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Upload failed');
+    curSource='user';DMIN=d.min_forecast_day;DMAX=d.max_forecast_day;curDay=DMAX;applyRange();
+    const b=$('srcBadge');if(b){b.className='srcbadge user';b.textContent='Your uploaded data';}
+    st.className='upstat ok';st.textContent=`✅ Cleaned ${Number(d.rows).toLocaleString()} hourly rows · ${DMIN} → ${DMAX}. Forecasts now use your data.`;
+    loadForecast();
+  }catch(err){st.className='upstat bad';st.textContent='⚠️ '+err.message;}
+  finally{btn.disabled=false;btn.textContent='Upload & Clean';}
+}
+async function useBuiltin(){
+  try{
+    const d=await apiPost('/api/use_builtin',{});
+    curSource='builtin';DMIN=d.min_forecast_day;DMAX=d.max_forecast_day;if(curDay<DMIN||curDay>DMAX)curDay=DMAX;applyRange();
+    const b=$('srcBadge');if(b){b.className='srcbadge demo';b.textContent='Built-in Spain demo';}
+    const st=$('upStat');if(st){st.className='upstat';st.textContent='';}
+    loadForecast();
+  }catch(err){}
+}
+let lastFc=null;
+async function loadForecast(){
+  const day=$('fdate').value||curDay;curDay=day;const btn=$('fBtn');if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Forecasting...';}
+  try{
+    const fc=await api('/api/forecast?day='+day);lastFc=fc;
+    const p=fc.rows.map(r=>r.predicted),mn=Math.min(...p),mx=Math.max(...p),av=p.reduce((a,b)=>a+b,0)/p.length;
+    const imin=p.indexOf(mn),imax=p.indexOf(mx);
+    const rows=fc.rows.map(r=>{const cls=r.predicted<=mn+(mx-mn)*0.25?['c','Cheap']:r.predicted>=mn+(mx-mn)*0.72?['e','Expensive']:['m','Moderate'];return `<tr><td><b>${r.time}</b></td><td>${r.predicted}</td><td style="color:#8496ab">${r.actual??'&ndash;'}</td><td style="color:#8496ab">${r.lower} &ndash; ${r.upper}</td><td><span class="pill ${cls[0]}">${cls[1]}</span></td></tr>`;}).join('');
+    $('fBody').innerHTML=`
+     <div class="kpis"><div class="kpi"><div class="l">AVERAGE PRICE (24H)</div><div class="v">${av.toFixed(1)} <span style="font-size:15px;color:#8496ab">&euro;/MWh</span></div></div>
+       <div class="kpi g"><div class="l">CHEAPEST HOUR</div><div class="v">${fc.rows[imin].time}</div><div class="d">${mn.toFixed(1)} &euro;/MWh</div></div>
+       <div class="kpi r"><div class="l">PEAK HOUR</div><div class="v">${fc.rows[imax].time}</div><div class="d">${mx.toFixed(1)} &euro;/MWh</div></div>
+       <div class="kpi"><div class="l">MODEL CONFIDENCE</div><div class="v">&plusmn; ${(fc.rows.reduce((a,r)=>a+r.band_width,0)/fc.rows.length/2).toFixed(1)}</div><div class="d">avg risk band</div></div></div>
+     <div class="panel"><div class="ph"><h2>Predicted vs Actual Price with Risk Band</h2><span class="chip">${fc.day}</span></div>
+       <div class="sub">Predicted electricity price for the day. The shaded band is the model&#39;s uncertainty; the grey dashed line is the price that actually happened.</div>
+       <div class="legend"><span><span class="dot" style="background:#0e7490"></span> Predicted</span><span><span class="dot" style="background:#94a3b8"></span> Actual</span><span><span class="dot" style="background:#0e7490;opacity:.2"></span> Risk band</span></div>
+       ${priceChart(fc.rows)}</div>
+     <div class="panel"><div class="ph"><h2>Hourly Price Table</h2><span class="chip">All 24 hours</span></div>
+       <table><thead><tr><th>Hour</th><th>Predicted (&euro;/MWh)</th><th>Actual</th><th>Range</th><th>Rating</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }catch(e){$('fBody').innerHTML=`<div class="panel"><div class="sub" style="margin:0">${e.message}</div></div>`;}
+  finally{if(btn){btn.disabled=false;btn.textContent='Get Forecast';}}
+}
+function exportFc(){if(!lastFc)return;const csv=['Hour,Predicted,Actual,Lower,Upper'].concat(lastFc.rows.map(r=>`${r.time},${r.predicted},${r.actual??''},${r.lower},${r.upper}`)).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='forecast_'+lastFc.day+'.csv';a.click();}
+
+// ---- PLAN ----
+async function renderPlan(){
+  $('v-plan').innerHTML=`
+   <div class="panel"><h2>${IC.bulb} Your money-saving plan</h2>
+     <div class="sub">Pick your day and what you use. SmartVolt forecasts the prices and tells you the best time to run each thing to save money.</div>
+     <div class="row"><label>Day</label><input type="date" id="pdate" min="${DMIN}" max="${DMAX}" value="${curDay}"><button class="btn" id="pBtn" onclick="loadPlan()">Get My Plan</button></div>
+     <div class="row" style="margin-top:12px" id="appList"></div>
+   </div>
+   <div id="pBody"></div>`;
+  renderAppChecks();loadPlan();
+}
+function renderAppChecks(){
+  $('appList').innerHTML=APPS.map(([k,l])=>`<label style="display:flex;align-items:center;gap:7px;background:#f5f9ff;border:1.5px solid ${SELAPPS.includes(k)?'#8fd3e0':'#e5edf4'};border-radius:22px;padding:8px 14px;cursor:pointer;font-size:13px;color:#40506a;font-weight:600"><input type="checkbox" value="${k}" ${SELAPPS.includes(k)?'checked':''} onchange="toggleApp('${k}')" style="accent-color:#0e7490"> ${l}</label>`).join('');
+}
+function toggleApp(k){if(SELAPPS.includes(k))SELAPPS=SELAPPS.filter(x=>x!==k);else SELAPPS.push(k);renderAppChecks();}
+async function loadPlan(){
+  const day=$('pdate').value||curDay;curDay=day;const btn=$('pBtn');if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Working...';}
+  try{
+    const d=await api(`/api/plan?day=${day}&appliances=${SELAPPS.join(',')||'washing_machine,ev'}`);const p=d.plan,ex=d.explanation;
+    const price=await api('/api/forecast?day='+day);const pr=price.rows.map(r=>r.predicted);const mn=Math.min(...pr),mx=Math.max(...pr);
+    const strip=price.rows.map(r=>{const c=r.predicted<=mn+(mx-mn)*0.25?'#16a34a':r.predicted>=mn+(mx-mn)*0.72?'#ef4444':'#9db4d4';return `<i style="background:${c}" title="${r.time}: ${r.predicted}"></i>`;}).join('');
+    const recIcon=a=>IC[APP_IC[a]]||IC.plug;
+    const slots=p.appliance_recommendations.map(r=>`<div class="slot"><div class="ic" style="background:linear-gradient(135deg,#0e7490,#2aa7c1)">${recIcon(r.appliance)}</div><div class="body"><h4 style="text-transform:capitalize">${r.appliance.replace(/_/g,' ')}</h4><span class="win">Run at ${fmtTime(r.best_start)}</span></div><div class="amt"><b>&minus;&euro;${r.saving_eur.toFixed(2)}</b><small>vs peak</small></div></div>`).join('');
+    const b=p.battery_advice||{};
+    $('pBody').innerHTML=`
+     <div class="grid2" style="grid-template-columns:1.3fr .7fr">
+       <div class="panel" style="margin:0"><h2>Your cheapest hours on ${p.day}</h2><div class="sub">Green blocks are the cheapest hours to use electricity. Red blocks are expensive.</div>
+         <div class="hours">${strip}</div><div class="tl"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+         <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap"><span class="badge">&#9989; Cheapest: ${p.cheapest_hours.map(fmtTime).slice(0,3).join(', ')}</span><span class="badge" style="background:#fff5e6;color:#d97706">&#9888; Avoid: ${p.most_expensive_hours.map(fmtTime).slice(0,3).join(', ')}</span></div>
+       </div>
+       <div class="save"><div style="font-size:14px;opacity:.9">ESTIMATED SAVING</div><div class="big">&euro; ${p.total_appliance_saving_eur.toFixed(2)}</div><p>${ex.summary?clip(ex.summary,240):'By shifting your appliances into the cheapest hours, SmartVolt estimates this saving for '+p.day+'.'}</p></div>
+     </div>
+     <div class="panel"><h2>${IC.clock} Recommended schedule</h2><div class="sub">SmartVolt matched each of your devices to the cheapest safe time slot based on the forecast.</div>${slots||'<div class="grey">Tick some devices above to see a schedule.</div>'}
+       ${b.charge_hours?`<div class="slot"><div class="ic" style="background:linear-gradient(135deg,#f59e0b,#f7b955)">${IC.batt}</div><div class="body"><h4>Home battery / EV</h4><span class="win">Charge ${b.charge_hours.map(fmtTime).slice(0,3).join(', ')} &middot; use at peak</span></div><div class="amt"><b>&euro;${b.saving_eur_per_mwh}/MWh</b><small>peak avoided</small></div></div>`:''}
+     </div>`;
+  }catch(e){$('pBody').innerHTML=`<div class="panel"><div class="sub" style="margin:0">${e.message}</div></div>`;}
+  finally{if(btn){btn.disabled=false;btn.textContent='Get My Plan';}}
+}
+
+// ---- SAVINGS ----
+async function renderSavings(){
+  $('v-savings').innerHTML=`<div class="panel"><h2>${IC.coin} Savings tracker</h2><div class="sub">How much SmartVolt saves you by moving usage into the cheapest hours. Today&#39;s figure is from the live forecast; totals build up from every forecast you run.</div><div class="row"><label>Day</label><input type="date" id="sdate" min="${DMIN}" max="${DMAX}" value="${curDay}"><button class="btn" id="sBtn" onclick="loadSavings()">Update</button></div></div><div id="sBody"></div>`;
+  loadSavings();
+}
+async function loadSavings(){
+  const day=$('sdate').value||curDay;curDay=day;const btn=$('sBtn');if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>...';}
+  try{
+    const [pd,hd]=await Promise.all([api(`/api/plan?day=${day}&appliances=${SELAPPS.join(',')||'washing_machine,dishwasher,ev'}`),api('/api/history')]);
+    const p=pd.plan,hist=hd.history||[];const total=hist.reduce((a,x)=>a+(x.saving||0),0),runs=hist.length;
+    const vals=hist.slice(0,8).reverse();const mxv=Math.max(1,...vals.map(x=>x.saving||0));
+    const bars=vals.map(x=>`<div class="col"><div class="amt">&euro;${(x.saving||0).toFixed(1)}</div><div class="b" style="height:${Math.round((x.saving||0)/mxv*140)}px"></div><div class="mo">${(x.day||'').slice(5)}</div></div>`).join('');
+    $('sBody').innerHTML=`
+     <div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi g"><div class="l">Saving on ${p.day}</div><div class="v">&euro;${p.total_appliance_saving_eur.toFixed(2)}</div></div><div class="kpi"><div class="l">Saved across ${runs} forecast${runs===1?'':'s'}</div><div class="v">&euro;${total.toFixed(2)}</div></div><div class="kpi"><div class="l">Days planned</div><div class="v">${runs}</div></div></div>
+     <div class="panel"><div class="sub" style="margin:0">This is your saving <b>over time</b>. For today&#39;s device-by-device schedule, see the <a onclick="go('plan')" style="color:var(--blue);cursor:pointer;font-weight:600">Plan</a> page.</div></div>
+     ${vals.length?`<div class="panel"><h2>${IC.chart} Savings from your recent forecasts</h2><div class="sub">Estimated money saved on each day you ran a forecast.</div><div class="sbars">${bars}</div></div>`:'<div class="panel"><div class="grey" style="margin:0">Run a few forecasts to build up your savings history.</div></div>'}`;
+  }catch(e){$('sBody').innerHTML=`<div class="panel"><div class="sub" style="margin:0">${e.message}</div></div>`;}
+  finally{if(btn){btn.disabled=false;btn.textContent='Update';}}
+}
+
+// ---- GREEN ----
+async function renderGreen(){
+  $('v-green').innerHTML=`<div class="panel"><h2>${IC.sun} Greenest hours to use power</h2><div class="sub">Electricity is cleanest when a lot of it comes from solar, wind and nuclear. Green blocks are the low-carbon hours. Computed from the real Spanish generation mix.</div><div class="row"><label>Day</label><input type="date" id="gdate" min="${DMIN}" max="${DMAX}" value="${curDay}"><button class="btn" id="gBtn" onclick="loadGreen()">Update</button></div></div><div id="gBody"></div>`;
+  loadGreen();
+}
+async function loadGreen(){
+  const day=$('gdate').value||curDay;curDay=day;const btn=$('gBtn');if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>...';}
+  try{
+    const g=await api('/api/green?day='+day);const COL={veryclean:'#16a34a',clean:'#7bcf5a',average:'#f7b955',high:'#e0794a'};
+    const strip=g.hours.map(h=>`<i style="flex:1;min-width:10px;height:46px;border-radius:5px;background:${COL[h.cls]}" title="${h.time}: ${h.intensity} gCO2/kWh, ${h.clean_pct}% clean"></i>`).join('');
+    const mc={solar:'#f7b955',wind:'#0e7490',nuclear:'#7c5cff',gas:'#94a3b8',coal:'#64748b'};
+    const mix=g.mix.map(m=>`<div class="mixrow"><div class="top"><b style="text-transform:capitalize">${m.source}</b><span>${m.pct}%</span></div><div class="mixtrack"><i style="width:${m.pct}%;background:${mc[m.source]}"></i></div></div>`).join('');
+    $('gBody').innerHTML=`
+     <div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi g"><div class="l">Cleanest hour (${g.min_intensity} gCO&#8322;/kWh)</div><div class="v">${g.cleanest.time}</div></div><div class="kpi"><div class="l">of the day was low-carbon</div><div class="v">${g.clean_share_pct}%</div></div><div class="kpi"><div class="l">CO&#8322; saved at cleanest vs dirtiest hour</div><div class="v">${g.co2_saved_kg} kg</div></div></div>
+     <div class="panel"><h2>Cleanest hours to use power</h2><div class="sub">Green blocks are low-carbon — the best time to run heavy appliances if you want to cut emissions, not just cost.</div>
+       <div style="display:flex;gap:4px">${strip}</div>
+       <div class="glegend"><span><span class="sw" style="background:#16a34a"></span> Very clean</span><span><span class="sw" style="background:#7bcf5a"></span> Clean</span><span><span class="sw" style="background:#f7b955"></span> Average</span><span><span class="sw" style="background:#e0794a"></span> High carbon</span></div></div>
+     <div class="panel"><h2>Energy mix on ${g.day}</h2><div class="sub">Where Spain&#39;s electricity came from that day — the more renewables, the cleaner your power.</div>${mix}<div class="grey">Cleanest window <b>${g.cleanest.time}</b> &middot; dirtiest <b>${g.dirtiest.time}</b> (${g.dirtiest.intensity} gCO&#8322;/kWh).</div></div>`;
+  }catch(e){$('gBody').innerHTML=`<div class="panel"><div class="sub" style="margin:0">${e.message}</div></div>`;}
+  finally{if(btn){btn.disabled=false;btn.textContent='Update';}}
+}
+
+// ---- ASSISTANT ----
+function renderAssistant(){
+  $('v-assistant').innerHTML=`
+   <div class="chatwrap">
+     <div class="panel side" style="height:fit-content"><h3>&#128172; Try asking</h3><p>SmartVolt&#39;s assistant answers using the live price forecast for Spain.</p>
+       <button class="sug" onclick="ask(this.textContent)">When is the cheapest time to run my washing machine?</button>
+       <button class="sug" onclick="ask(this.textContent)">Should I charge my EV now or wait?</button>
+       <button class="sug" onclick="ask(this.textContent)">How much can I save today?</button>
+       <button class="sug" onclick="ask(this.textContent)">Is tomorrow an expensive day?</button></div>
+     <div class="panel" style="display:flex;flex-direction:column"><h2>${IC.robot} SmartVolt Assistant</h2>
+       <div class="chat" id="chatBox"><div class="msg a"><div class="av">&#129302;</div><div class="b">Hi! Ask me about tomorrow&#39;s prices and the best time to use electricity — I&#39;ll answer using the live forecast.</div></div></div>
+       <div class="row"><input type="text" id="chatIn" placeholder="Ask about prices, savings, or the best time to use a device..." style="flex:1" onkeydown="if(event.key==='Enter')send()"><button class="btn" onclick="send()">Send &rarr;</button></div></div>
+   </div>`;
+}
+function addMsg(t,who){const m=document.createElement('div');m.className='msg '+who;m.innerHTML=`<div class="av">${who==='u'?'&#128100;':'&#129302;'}</div><div class="b">${esc(t)}</div>`;$('chatBox').appendChild(m);$('chatBox').scrollTop=$('chatBox').scrollHeight;return m;}
+function ask(q){$('chatIn').value=q;send();}
+async function send(){const q=$('chatIn').value.trim();if(!q)return;$('chatIn').value='';addMsg(q,'u');const w=addMsg('…','a');
+  try{const d=await apiPost('/api/chat',{question:q,day:curDay,appliances:SELAPPS});w.querySelector('.b').textContent=d.answer;}catch(e){w.querySelector('.b').textContent='Error: '+e.message;}}
+
+// ---- ABOUT ----
+function renderAbout(){
+  $('v-about').innerHTML=`
+   <div class="panel">
+     <h2>${IC.bulb} About SmartVolt</h2>
+     <div class="sub">SmartVolt forecasts day-ahead electricity prices for Spain and turns them into simple, money-saving advice for your home.</div>
+     <p style="margin-top:12px;line-height:1.7">Electricity prices in Spain change every hour and are hard to follow, so people often run heavy appliances at the most expensive times. SmartVolt predicts the next 24 hours of prices with a deep-learning model, shows how confident it is, and tells you the cheapest and cleanest hours to use power &mdash; helping you cut your bill and your carbon.</p>
+   </div>
+   <div class="panel" style="margin-top:16px"><h3 style="font-family:'Poppins'">How it works</h3>
+     <p style="line-height:1.7">The forecasting engine is an <b>N-BEATSx</b> deep-learning model trained on four years (2015&ndash;2018) of Spanish price and weather data. It looks back 168 hours (one week) to predict the next 24, and a <b>Monte-Carlo Dropout</b> risk band shows how reliable each hour is. A team of AI agents then turns the numbers into plain-language advice.</p>
+     <a class="btn" style="margin-top:14px;display:inline-block" onclick="go('accuracy')">See the accuracy &rarr;</a></div>`;
+}
+
+// ---- HELP ----
+function renderHelp(){
+  const faq=[
+    ["How do I get a price forecast?","Open the <b>Forecast</b> page, pick a day in the 2015&ndash;2018 range, and SmartVolt shows the predicted 24 hourly prices with a risk band."],
+    ["How do I see the cheapest time to run a device?","Open the <b>Plan</b> page. It lists the cheapest hours for each appliance, your EV and your home battery, and the money you save."],
+    ["Why isn't the AI Assistant answering?","The assistant needs a free Groq API key in <b>api_key.txt</b>. If a key is set but you still see an error, the model name may have changed &mdash; set the <b>GROQ_MODEL</b> environment variable to a current Groq model. Even without a key, the app still gives you a built-in plain-language summary."],
+    ["What do MAE, RMSE, MAPE and R² mean?","They measure accuracy on unseen data. In short: SmartVolt predicts the price to within about 8% (MAPE 8.02%), and explains about three-quarters of the price movement (R² 0.76). See the <b>Accuracy</b> page for the full table."],
+    ["What are the greenest hours?","On the <b>Greenest Hours</b> page you can see when the grid is cleanest &mdash; the hours with the most solar and wind &mdash; so you cut emissions as well as cost."]
+  ];
+  const items=faq.map(([q,a])=>`<div class="set"><div class="body"><h4>${q}</h4><small style="line-height:1.6">${a}</small></div></div>`).join('');
+  $('v-help').innerHTML=`
+   <div class="panel"><h2>${IC.robot} Help &amp; FAQ</h2>
+     <div class="sub">Quick answers for using SmartVolt. Still stuck? Email support@smartvolt.app.</div>
+     <div class="setlist" style="margin-top:12px">${items}</div>
+   </div>`;
+}
+
+// ---- ACCURACY ----
+async function renderAccuracy(){
+  $('v-accuracy').innerHTML='<div class="panel"><span class="spin"></span>Loading accuracy...</div>';
+  try{
+    const [md,hd]=await Promise.all([api('/api/metrics'),api('/api/history')]);
+    const m=md.metrics,o=m.find(x=>x.model.includes('N-BEATSx'))||m[0];
+    const mxMae=Math.max(...m.map(x=>x.mae));
+    const cols={'Naive':'#cbd5e1','ARX':'#94a3b8','LSTM':'#2aa7c1','N-BEATSx':'#16a34a'};
+    const bars=m.slice().sort((a,b)=>b.mae-a.mae).map(x=>{const key=Object.keys(cols).find(k=>x.model.includes(k))||'ARX';const w=Math.round(x.mae/mxMae*100);return `<div class="bar"><div class="nm">${x.model}${x.model.includes('N-BEATSx')?' &#9733;':''}</div><div class="track"><div class="fill" style="width:${w}%;background:${cols[key]}">${x.mae}</div></div></div>`;}).join('');
+    const h=hd.history||[];let ht='<table><thead><tr><th>Day</th><th>Avg price</th><th>Accuracy</th><th>Saving</th></tr></thead><tbody>';
+    if(!h.length)ht+='<tr><td colspan="4" style="color:#94a3b8">No forecasts yet — run a forecast to start your track record.</td></tr>';
+    h.forEach(x=>{const acc=x.mape!=null?(100-x.mape).toFixed(0)+'%':'&ndash;';ht+=`<tr><td><b>${x.day}</b></td><td>${x.avg_price??'&ndash;'}</td><td><span class="pill c">${acc}</span></td><td>${x.saving!=null?'&euro;'+x.saving:'&ndash;'}</td></tr>`;});ht+='</tbody></table>';
+    $('v-accuracy').innerHTML=`
+     <div class="trust"><div class="big">~${(100-o.mape).toFixed(0)}%<small>ACCURATE</small></div><div><h2>You can trust the forecast</h2><p>On unseen data SmartVolt predicts the price to within about ${o.mape}%. That&#39;s accurate enough to reliably tell cheap hours from expensive ones. The numbers below are the real measured results.</p></div></div>
+     <div class="kpis"><div class="kpi"><div class="l">MAE (&euro;/MWh)</div><div class="v">${o.mae}</div></div><div class="kpi"><div class="l">RMSE (&euro;/MWh)</div><div class="v">${o.rmse}</div></div><div class="kpi"><div class="l">MAPE</div><div class="v">${o.mape}%</div></div><div class="kpi"><div class="l">R&sup2; score</div><div class="v">${o.r2}</div></div></div>
+     <div class="panel"><h2>How SmartVolt compares</h2><div class="sub">Average error (MAE) of each method on the same held-out Spanish price data — lower is better.</div>${bars}<div class="grey">&#9733; N-BEATSx leads on every measure — MAE ${o.mae}, RMSE ${o.rmse}, MAPE ${o.mape}%, R&sup2; ${o.r2}.</div></div>
+     <div class="panel"><h2>Your track record</h2><div class="sub">Every forecast you run is logged here — the day, its average price, how accurate it was, and the estimated saving.</div>${ht}</div>`;
+  }catch(e){$('v-accuracy').innerHTML=`<div class="panel"><div class="sub" style="margin:0">${e.message}</div></div>`;}
+}
+
+// ---- DEVICES ----
+// Device-type options, the colour for each, and the user's device list (kept in
+// memory for this session so the screen is fully interactive).
+const DTYPES=[['car','Electric Car'],['batt','Home Battery'],['sun','Solar Panels'],['wash','Washing M.'],['dish','Dishwasher'],['add','Other']];
+const DGRAD={car:'#0e7490,#2aa7c1',batt:'#f59e0b,#f7b955',sun:'#0ea5e9,#38bdf8',wash:'#16a34a,#22c55e',dish:'#7c3aed,#a855f7',add:'#64748b,#94a3b8'};
+let selType='car';
+let DEVLIST=[
+  {ic:'car',name:'Tesla Model 3',desc:'60 kWh · charges overnight',on:true},
+  {ic:'batt',name:'Home Battery',desc:'10 kWh · charge night, use at peak',on:true},
+  {ic:'wash',name:'Washing Machine',desc:'2 h cycle · flexible',on:true},
+  {ic:'sun',name:'Solar Panels',desc:'4 kW · store surplus',on:false},
+];
+function devListHtml(){
+  if(!DEVLIST.length)return '<div class="sub" style="margin-top:8px">No devices yet — add one on the left.</div>';
+  return DEVLIST.map((d,i)=>`<div class="dev"><div class="ic" style="background:linear-gradient(135deg,${DGRAD[d.ic]||DGRAD.add})">${IC[d.ic]||IC.plug}</div><div class="body"><h4>${esc(d.name)}</h4><small>${esc(d.desc)}</small></div><div class="tog ${d.on?'':'off'}" title="Turn on/off" onclick="toggleDev(${i})"></div></div>`).join('');
+}
+function toggleDev(i){DEVLIST[i].on=!DEVLIST[i].on;$('devlist').innerHTML=devListHtml();}
+function pickType(v){selType=v;document.querySelectorAll('#v-devices .type').forEach(el=>el.classList.toggle('on',el.dataset.t===v));}
+function saveDevice(){
+  const name=($('devName').value||'').trim()||(DTYPES.find(x=>x[0]===selType)||['','Device'])[1];
+  const cap=($('devCap').value||'').trim(), tm=($('devTime').value||'').trim();
+  const bits=[];if(cap)bits.push(cap+' kWh');if(tm)bits.push(tm+' h charge');
+  DEVLIST.push({ic:selType,name:name,desc:bits.join(' · ')||'Added to your plan',on:true});
+  $('devlist').innerHTML=devListHtml();
+  $('devName').value='';$('devCap').value='';$('devTime').value='';
+}
+function renderDevices(){
+  const t=DTYPES.map(x=>`<div class="type ${x[0]===selType?'on':''}" data-t="${x[0]}" onclick="pickType('${x[0]}')"><div class="ic">${IC[x[0]]}</div><div class="nm">${x[1]}</div></div>`).join('');
+  $('v-devices').innerHTML=`
+   <div class="grid2" style="grid-template-columns:1.15fr .85fr">
+     <div class="panel" style="margin:0"><h2>Add a new device</h2><div class="sub">Tell SmartVolt what you own so your saving plan can be tailored to your home.</div>
+       <label style="display:block;margin-bottom:10px">Device type</label><div class="types">${t}</div>
+       <div class="field"><label>Device name</label><input id="devName" placeholder="e.g. Tesla Model 3"></div>
+       <div class="row" style="gap:14px"><div class="field" style="flex:1"><label>Capacity (kWh)</label><input id="devCap" placeholder="e.g. 60"></div><div class="field" style="flex:1"><label>Charge time (hours)</label><input id="devTime" placeholder="e.g. 4"></div></div>
+       <button class="btn" style="width:100%" onclick="saveDevice()">Save Device</button></div>
+     <div class="panel" style="margin:0"><h2>Your devices</h2><div class="sub">Devices SmartVolt includes in your plan.</div><div id="devlist">${devListHtml()}</div></div>
+   </div>`;
+}
+
+// ---- SETTINGS ----
+function renderSettings(){
+  const dark=!!PREFS.dark;
+  $('v-settings').innerHTML=`
+   <div class="grid2" style="grid-template-columns:.9fr 1.1fr">
+     <div class="panel" style="margin:0"><h2>Account</h2><div class="sub">Your profile and login details.</div>
+       <div class="prof"><div class="av">${(USERNAME||'G').charAt(0).toUpperCase()}</div><div><b>${USERNAME}</b><br><small>${TOKEN?'Signed in':'Guest — not saved'}</small></div></div>
+       <div class="field"><label>Display name</label><input value="${USERNAME}" id="setName"></div>
+       ${TOKEN?`<div class="field"><label>Current password</label><input type="password" id="pwOld" placeholder="Current password"></div><div class="field"><label>New password</label><input type="password" id="pwNew" placeholder="New password (4+ chars)"></div><div class="lerr" id="pwErr" style="text-align:left"></div><button class="btn" onclick="changePw()">Update password</button>`:'<div class="grey">Log in or sign up to change account details.</div>'}
+     </div>
+     <div class="panel" style="margin:0"><h2>Preferences</h2><div class="sub">Control how SmartVolt looks and what it tells you.</div>
+       <div class="set"><div class="ic">${IC.moon}</div><div class="body"><h4>Dark Mode</h4><small>Use a darker theme that&#39;s easier on the eyes at night</small></div><div class="tog ${dark?'':'off'}" onclick="toggleTheme();renderSettings()"></div></div>
+       <div class="set"><div class="ic">${IC.bell}</div><div class="body"><h4>Price Alerts</h4><small>Notify me when tomorrow&#39;s prices are unusually high or low</small></div><div class="tog ${PREFS.alerts?'':'off'}" onclick="toggleAlerts();renderSettings()"></div></div>
+       <div class="set"><div class="ic">${IC.leaf}</div><div class="body"><h4>Greenest-hours tips</h4><small>Include clean-energy advice in my plan</small></div><div class="tog ${PREFS.greentips===false?'off':''}" onclick="toggleGreenTips();renderSettings()"></div></div>
+     </div>
+   </div>
+   ${TOKEN?`<div class="panel"><h2>${IC.trash} Delete account</h2><p class="sub" style="margin-top:0">This permanently removes your account and saved devices. This cannot be undone.</p><button class="danger" onclick="deleteAccount()">Delete my account</button></div>`:''}`;
+}
+async function changePw(){const o=$('pwOld').value,n=$('pwNew').value,e=$('pwErr');if(!o||!n){e.textContent='Fill both fields.';return;}try{await apiPost('/api/change_password',{token:TOKEN,old_password:o,new_password:n});e.style.color='#16a34a';e.textContent='Password updated.';}catch(err){e.style.color='#dc2626';e.textContent=err.message;}}
+async function deleteAccount(){if(!confirm('Delete your account permanently?'))return;try{await apiPost('/api/delete_account',{token:TOKEN});}catch(e){}localStorage.clear();logout();}
+
+// ---- theme / alerts ----
+function applyTheme(){const on=!!PREFS.dark;document.body.classList.toggle('dark',on);$('themeBtn').innerHTML=on?IC.sund:IC.moon;}
+function toggleTheme(){PREFS.dark=!PREFS.dark;applyTheme();savePrefs();}
+function toggleAlerts(){PREFS.alerts=!PREFS.alerts;savePrefs();}
+function toggleGreenTips(){PREFS.greentips=(PREFS.greentips===false);savePrefs();}
+function subscribe(){const e=($('newsEmail').value||'').trim();const ok=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);const m=$('newsMsg');if(!ok){m.style.color='#fca5a5';m.textContent='Please enter a valid email.';return;}m.style.color='#7be0a2';m.textContent='Thanks! You’re subscribed to weekly saving tips.';$('newsEmail').value='';}
+function savePrefs(){localStorage.setItem('sv_prefs',JSON.stringify(PREFS));if(TOKEN)apiPost('/api/prefs',{token:TOKEN,prefs:PREFS}).catch(()=>{});}
 
 // ---- auth ----
 let authMode='login';
-function togglePw(){const i=$('lPass'),e=$('pwEye');if(i.type==='password'){i.type='text';e.style.color='#0e7490';e.title='Hide password';}else{i.type='password';e.style.color='#94a3b8';e.title='Show password';}}
-function segMode(m){authMode=m;$('segLogin').classList.toggle('on',m==='login');$('segSignup').classList.toggle('on',m==='signup');$('authBtn').textContent=m==='login'?'Log in':'Create account';$('loginErr').textContent='';}
-async function doAuth(){
-  const u=$('lUser').value.trim(), p=$('lPass').value;
-  if(!u||!p){$('loginErr').textContent='Please enter a username and password.';return;}
-  const btn=$('authBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Please wait';
-  try{const r=await fetch('/api/'+(authMode==='login'?'login':'signup'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
-    const d=await r.json();if(!r.ok)throw new Error(d.detail||'error');
-    TOKEN=d.token;localStorage.setItem('sv_token',d.token);localStorage.setItem('sv_user',d.username);localStorage.setItem('sv_apps',JSON.stringify(d.appliances||[]));
-    const newUser=(authMode==='signup');
-    enterApp(d.username,d.appliances,d.prefs,newUser);
-  }catch(e){$('loginErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=authMode==='login'?'Log in':'Create account';}
-}
-function guest(){localStorage.removeItem('sv_token');localStorage.removeItem('sv_user');TOKEN=null;enterApp('Guest',['washing_machine','dishwasher','ev','water_heater'],{},true);}
-async function socialLogin(provider){
-  const email=prompt(`Continue with ${provider}\n\nEnter your email to sign in:`, '');
-  if(email===null)return;
+function segMode(m){authMode=m;
+  $('authTitle').textContent=m==='login'?'Welcome back':'Create your account';
+  $('authSub').textContent=m==='login'?"Sign in to see today's forecast and your plan.":'Start saving on your electricity bill today.';
+  $('authBtn').textContent=m==='login'?'Sign In':'Create Account';
+  $('fldName').style.display=m==='signup'?'':'none';
+  $('orText').textContent=m==='login'?'or continue with':'or sign up with';
+  $('togglePre').textContent=m==='login'?'New to SmartVolt?':'Already a member?';
+  $('toggleLink').textContent=m==='login'?'Sign Up':'Sign In';
+  $('switchPre').textContent=m==='login'?'New here?':'Already have an account?';
+  $('switchLink').textContent=m==='login'?'Create an account':'Sign In';
+  $('guestFoot').style.display=m==='login'?'':'none';
   $('loginErr').textContent='';
-  try{const r=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:provider,email:email})});
-    const d=await r.json();if(!r.ok)throw new Error(d.detail||'error');
-    TOKEN=d.token;localStorage.setItem('sv_token',d.token);localStorage.setItem('sv_user',d.username);localStorage.setItem('sv_apps',JSON.stringify(d.appliances||[]));
-    enterApp(d.username,d.appliances,d.prefs,true);
-  }catch(e){$('loginErr').textContent=e.message;}
 }
-function logout(){
-  const t=localStorage.getItem('sv_token');
-  if(t)fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})}).catch(()=>{});
-  localStorage.removeItem('sv_token');localStorage.removeItem('sv_user');localStorage.removeItem('sv_apps');
-  TOKEN=null;USERNAME='Guest';PREFS={};document.body.classList.remove('dark');
-  $('appRoot').classList.add('hidden');$('loginView').classList.remove('hidden');$('lUser').value='';$('lPass').value='';
-}
-function enterApp(user,apps,prefs,isNew){
-  PREFS=prefs||{};USERNAME=user||'Guest';
+function toggleMode(){segMode(authMode==='login'?'signup':'login');}
+async function doAuth(){const u=$('lUser').value.trim(),p=$('lPass').value;if(!u||!p){$('loginErr').textContent='Please enter a username and password.';return;}
+  const btn=$('authBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Please wait';
+  try{const d=await apiPost('/api/'+(authMode==='login'?'login':'signup'),{username:u,password:p});afterAuth(d);}
+  catch(e){$('loginErr').textContent=e.message;}finally{btn.disabled=false;btn.textContent=authMode==='login'?'Sign In':'Create Account';}}
+async function socialLogin(prov){const email=prompt('Continue with '+prov+'\\n\\nEnter your email:','');if(email===null)return;try{const d=await apiPost('/api/social',{provider:prov,email:email});afterAuth(d);}catch(e){$('loginErr').textContent=e.message;}}
+function guest(){TOKEN=null;localStorage.removeItem('sv_token');enterApp('Guest',{});}
+function afterAuth(d){TOKEN=d.token;localStorage.setItem('sv_token',d.token);localStorage.setItem('sv_user',d.username);if(d.appliances&&d.appliances.length)SELAPPS=d.appliances;enterApp(d.username,d.prefs||{});}
+function logout(){localStorage.removeItem('sv_token');localStorage.removeItem('sv_user');TOKEN=null;$('appRoot').classList.add('hidden');$('loginView').classList.remove('hidden');$('lUser').value='';$('lPass').value='';}
+function enterApp(user,prefs){USERNAME=user||'Guest';PREFS=prefs||{};try{PREFS=Object.assign(JSON.parse(localStorage.getItem('sv_prefs')||'{}'),PREFS);}catch(e){}
   $('loginView').classList.add('hidden');$('appRoot').classList.remove('hidden');
-  $('who').innerHTML=S+'<circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>&nbsp;'+user;
-  buildApps(apps&&apps.length?apps:['washing_machine','dishwasher','ev','water_heater']);
-  applyTheme();updateAlertBtn();
-  if(PREFS.alerts)scheduleAlert();
-  if(isNew&&!localStorage.getItem('sv_seen')){localStorage.setItem('sv_seen','1');$('welcome').classList.remove('hidden');}
-}
-function closeWelcome(){$('welcome').classList.add('hidden');}
-
-// ---- theme ----
-function applyTheme(){const on=!!PREFS.dark;document.body.classList.toggle('dark',on);
-  $('themeBtn').innerHTML=on?IC.sun:IC.moon;$('themeBtn').title=on?'Light mode':'Dark mode';
-  const st=$('setTheme');if(st)st.textContent=on?'Turn off':'Turn on';}
-function toggleTheme(){PREFS.dark=!PREFS.dark;applyTheme();savePrefs();}
-function savePrefs(){localStorage.setItem('sv_prefs',JSON.stringify(PREFS));if(!TOKEN)return;fetch('/api/prefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,prefs:PREFS})}).catch(()=>{});}
-
-// ---- settings ----
-function openSettings(){document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$('settings').classList.remove('hidden');
-  const isGuest=!TOKEN;
-  $('avatar').textContent=(USERNAME||'G').trim().charAt(0).toUpperCase();
-  $('profName').textContent=USERNAME||'Guest';
-  $('profSub').textContent=isGuest?'Guest — not signed in':'Signed in';
-  $('setWho').textContent=isGuest?'You are browsing as a guest, so your name and settings are not saved. Log in or sign up to keep them.':'Manage your account, notifications and appearance.';
-  $('setAccount').style.display=TOKEN?'':'none';
-  $('setTheme').textContent=PREFS.dark?'Turn off':'Turn on';updateAlertBtn();window.scrollTo({top:0,behavior:'smooth'});}
-async function changePw(){$('pwErr').textContent='';const o=$('pwOld').value,n=$('pwNew').value;
-  if(!o||!n){$('pwErr').textContent='Please fill both fields.';return;}
-  try{const r=await fetch('/api/change_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,old_password:o,new_password:n})});
-    const d=await r.json();if(!r.ok)throw new Error(d.detail||'error');
-    $('pwOld').value='';$('pwNew').value='';$('pwErr').style.color='var(--green)';$('pwErr').textContent='Password updated.';
-  }catch(e){$('pwErr').style.color='var(--red)';$('pwErr').textContent=e.message;}}
-async function deleteAccount(){if(!confirm('Delete your account permanently? This cannot be undone.'))return;
-  try{await fetch('/api/delete_account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});}catch(e){}
-  localStorage.clear();TOKEN=null;logout();}
-
-// ---- price alerts (browser notifications) ----
-function updateAlertBtn(){const b=$('setAlerts');if(b)b.textContent=PREFS.alerts?'Turn off':'Turn on';}
-async function toggleAlerts(){
-  if(!PREFS.alerts){
-    if(!('Notification'in window)){alert('Your browser does not support notifications.');return;}
-    const perm=await Notification.requestPermission();
-    if(perm!=='granted'){alert('Please allow notifications in your browser to use price alerts.');return;}
-    PREFS.alerts=true;scheduleAlert();
-  }else{PREFS.alerts=false;}
-  updateAlertBtn();savePrefs();
-}
-function scheduleAlert(){
-  // Demo-friendly: fetch tomorrow's cheapest hours and notify shortly after enabling.
-  if(!PREFS.alerts||!('Notification'in window)||Notification.permission!=='granted')return;
-  setTimeout(async()=>{
-    if(!PREFS.alerts)return;
-    try{const d=await api(`/api/plan?day=${($('pdate').value||DAY)}`);const ch=d.plan.cheapest_hours.join(', ');
-      new Notification('SmartVolt — cheap hours ahead ⚡',{body:`Cheapest electricity on ${d.plan.day}: ${ch}. Good time to run appliances or charge your EV.`});
-    }catch(e){}
-  },4000);
-}
-
-// ---- ui build ----
-$('nav').innerHTML=NAV.map(([v,l,ic],i)=>`<button data-view="${v}" class="${i===0?'active':''}">${IC[ic]} ${l}</button>`).join('');
-['plan:plan','ai:ai','fc:fc','bolt:bolt','tab:tab','info:info','ai2:ai','team:team','warn:warn','set:gear','lock:lock','trash:trash','up:up'].forEach(x=>{const[a,b]=x.split(':');const el=$('ic-'+a);if(el)el.innerHTML=IC[b];});
-$('setBtn').innerHTML=IC.gear;
-function buildApps(sel){window._sel=sel&&sel.length?sel:['washing_machine','dishwasher','ev','water_heater'];renderApps();}
-function renderApps(){
-  const sel=[...document.querySelectorAll('#appList input.builtin:checked')].map(x=>x.value);
-  const use=sel.length?sel:(window._sel||['washing_machine','dishwasher','ev','water_heater']);
-  let html=APPS.map(([k,l])=>`<label>${IC[k]}<input class="builtin" type="checkbox" value="${k}" ${use.includes(k)?'checked':''}> ${l}</label>`).join('');
-  html+=CUSTOM.map((c,i)=>`<label>${IC.bolt}<input class="custom" type="checkbox" data-i="${i}" checked> ${c.label} (${c.kw}kW·${c.hours}h) <a onclick="rmDevice(${i})" style="color:#c0392b;font-weight:800;margin-left:4px;cursor:pointer">&times;</a></label>`).join('');
-  $('appList').innerHTML=html;
-}
-function toggleAddDev(){$('addDevForm').classList.toggle('hidden');}
-function addDevice(){
-  const n=$('cdName').value.trim(),kw=parseFloat($('cdKw').value),h=parseInt($('cdHrs').value);
-  if(!n||!(kw>0)||!(h>0)){alert('Please enter a name, power in kW, and hours per day.');return;}
-  CUSTOM.push({label:n,kw:kw,hours:Math.min(h,12)});
-  $('cdName').value='';$('cdKw').value='';$('cdHrs').value='';$('addDevForm').classList.add('hidden');
-  renderApps();
-}
-function rmDevice(i){CUSTOM.splice(i,1);renderApps();}
-function selCustomStr(){return [...document.querySelectorAll('#appList input.custom:checked')].map(x=>{const c=CUSTOM[+x.dataset.i];return c?`${c.label}~${c.kw}~${c.hours}`:'';}).filter(Boolean).join(';');}
-function go(v){document.querySelector('.nav button[data-view="'+v+'"]').click();window.scrollTo({top:0,behavior:'smooth'});}
-document.querySelectorAll('#nav button').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));$(b.dataset.view).classList.remove('hidden');if(b.dataset.view==='performance')loadPerf();if(b.dataset.view==='history')loadHist();};});
-async function api(p){const r=await fetch(p);if(!r.ok)throw new Error((await r.json()).detail||'error');return r.json();}
-async function withLoad(btn,label,fn){const o=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="spin"></span>'+label;try{await fn();}finally{btn.disabled=false;btn.innerHTML=o;}}
-function selApps(){return [...document.querySelectorAll('#appList input.builtin:checked')].map(x=>x.value);}
-
-$('pBtn').onclick=()=>withLoad($('pBtn'),'Working...',async()=>{
-  const day=$('pdate').value||DAY, apps=selApps(), cust=selCustomStr();
-  if(TOKEN){fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,appliances:apps})}).catch(()=>{});}
-  const d=await api(`/api/plan?day=${day}&appliances=${apps.join(',')}&custom=${encodeURIComponent(cust)}`);const p=d.plan,ex=d.explanation;
-  const badge=ex.mode==='agent'?'<span class="aibadge">AI</span>':'<span class="aibadge off">built-in</span>';
-  const aiNote=(ex.mode!=='agent'&&ex.note)?`<div class="grey" style="margin-top:8px">AI note: ${ex.note}</div>`:'';
-  let recs=p.appliance_recommendations.map(r=>`<div class="rec"><div class="emoji">${IC[LABEL[r.appliance]]||IC.bolt}</div><div class="info"><div class="a">${r.appliance}</div><div class="t">Best at ${fmtTime(r.best_start)}</div></div><span class="s">saves &euro;${r.saving_eur.toFixed(2)}</span></div>`).join('');
-  const b=p.battery_advice, sig=p.grid_signals||[], th=p.signal_thresholds||{};
-  const strip=sig.map(s=>`<div class="sig ${s.signal.toLowerCase()}"><span class="h">${fmtTime(s.time)}</span>${s.signal}<span class="p">&euro;${s.price}</span></div>`).join('');
-  const sol=p.solar_advice||{};
-  $('planOut').innerHTML=`<div class="card"><h2><span class="ic">${IC.ai}</span>Advice ${badge}</h2><div class="ai">${ex.summary}</div>${aiNote}</div>
-   <div class="card"><h2><span class="ic">${IC.bar}</span>Summary for ${p.day}</h2><div class="kpi"><div class="box save"><div class="n">&euro;${p.total_appliance_saving_eur.toFixed(2)}</div><div class="l">saving today if you follow the plan</div></div><div class="box"><div class="n">${fmtList(p.cheapest_hours)}</div><div class="l">cheapest hours</div></div><div class="box"><div class="n">${fmtList(p.most_expensive_hours)}</div><div class="l">most expensive hours</div></div></div></div>
-   <div class="card"><h2><span class="ic">${IC.clock}</span>When to run each thing</h2>${recs}</div>
-   <div class="card"><h2><span class="ic">${IC.batt}</span>Solar, battery &amp; grid signals</h2>
-     <div class="sub" style="margin-top:0">Each hour is a signal: <b>BUY</b> (cheap — import from the grid, charge up, run appliances), <b>SELL</b> (expensive — use your stored power or sell back, avoid the grid), or <b>HOLD</b>.</div>
-     <div class="siglegend"><span><i class="dot" style="background:#15803d"></i>BUY &le; &euro;${th.buy_below}</span><span><i class="dot" style="background:#64748b"></i>HOLD</span><span><i class="dot" style="background:#c0392b"></i>SELL &ge; &euro;${th.sell_above}</span></div>
-     <div class="sigwrap">${strip}</div>
-     <div style="margin-top:14px"><div class="rec"><div class="emoji">${IC.batt}</div><div class="info"><div class="a">Charge battery / EV</div><div class="t">${fmtList(b.charge_hours)}</div></div><span class="s cheap">cheap hours</span></div>
-     <div class="rec"><div class="emoji">${IC.bulb}</div><div class="info"><div class="a">Use / sell stored power</div><div class="t">${fmtList(b.discharge_hours)}</div></div><span class="s">&euro;${b.saving_eur_per_mwh}/MWh spread</span></div></div>
-     <div class="solar" style="margin-top:12px">${IC.sun}<div>${sol.note||''}</div></div>
-   </div>`;
-});
-
-function addMsg(t,who){const m=document.createElement('div');m.className='msg '+who;m.textContent=t;$('chatBox').appendChild(m);$('chatBox').scrollTop=$('chatBox').scrollHeight;return m;}
-function ask(q){$('chatIn').value=q;send();}
-async function send(){const q=$('chatIn').value.trim();if(!q)return;$('chatIn').value='';addMsg(q,'u');const w=addMsg('...','a');
-  try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,day:($('pdate').value||DAY),appliances:selApps()})});const d=await r.json();w.textContent=d.answer;}catch(e){w.textContent='Error: '+e.message;}}
-
-function drawChart(rows){const W=900,H=280,ml=45,mr=25,mt=25,mb=30,pw=W-ml-mr,ph=H-mt-mb;
-  const pr=rows.map(r=>r.predicted),lo=rows.map(r=>r.lower),up=rows.map(r=>r.upper),ac=rows.map(r=>r.actual).filter(v=>v!=null);
-  const all=pr.concat(lo,up,ac);let ymin=Math.floor(Math.min(...all)/10)*10,ymax=Math.ceil(Math.max(...all)/10)*10;
-  const X=i=>ml+i*(pw/(rows.length-1)),Y=v=>mt+(ymax-v)/(ymax-ymin)*ph;const line=v=>v.map((x,i)=>`${X(i).toFixed(1)},${Y(x).toFixed(1)}`).join(' ');
-  const band=up.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')+' '+lo.map((v,i)=>`${X(rows.length-1-i).toFixed(1)},${Y(lo[rows.length-1-i]).toFixed(1)}`).join(' ');
-  let g='';for(let q=ymin;q<=ymax;q+=10){g+=`<line x1="${ml}" y1="${Y(q)}" x2="${W-mr}" y2="${Y(q)}" stroke="#eef1f5"/><text x="${ml-6}" y="${Y(q)+3}" font-size="10" fill="#8a94a6" text-anchor="end">${q}</text>`;}
-  let xl='';for(let i=0;i<rows.length;i+=3)xl+=`<text x="${X(i)}" y="${H-8}" font-size="10" fill="#8a94a6" text-anchor="middle">${fmtTime(rows[i].time)}</text>`;const ha=ac.length>0;
-  const lg=`<g font-size="11" fill="#5b6b7f">${ha?`<line x1="${ml}" y1="14" x2="${ml+22}" y2="14" stroke="#2563eb" stroke-width="2.4"/><text x="${ml+28}" y="17">Actual</text>`:''}<line x1="${ml+(ha?110:0)}" y1="14" x2="${ml+(ha?132:22)}" y2="14" stroke="#0e7490" stroke-width="2.4" stroke-dasharray="5,3"/><text x="${ml+(ha?138:28)}" y="17">Predicted</text><rect x="${ml+(ha?250:130)}" y="8" width="20" height="11" fill="#0e7490" opacity="0.16"/><text x="${ml+(ha?275:155)}" y="17">95% band</text></g>`;
-  $('chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:900px">${lg}${g}<polygon points="${band}" fill="#0e7490" opacity="0.11"/>${ha?`<polyline points="${line(rows.map(r=>r.actual))}" fill="none" stroke="#2563eb" stroke-width="2.4"/>`:''}<polyline points="${line(pr)}" fill="none" stroke="#0e7490" stroke-width="2.2" stroke-dasharray="5,3"/>${xl}</svg>`;}
-async function loadForecast(){const day=$('fdate').value||DAY;await withLoad($('fBtn'),'Forecasting...',async()=>{
-  const fc=await api('/api/forecast?day='+day);lastForecast=fc;drawChart(fc.rows);
-  const p=fc.rows.map(r=>r.predicted),mn=Math.min(...p),mx=Math.max(...p),av=p.reduce((a,b)=>a+b,0)/p.length;
-  $('fOverview').innerHTML=`<div class="card"><h2><span class="ic">${IC.fc}</span>Overview for ${fc.day}</h2><div class="kpi"><div class="box"><div class="n">${av.toFixed(1)}</div><div class="l">average EUR/MWh</div></div><div class="box save"><div class="n">${mn.toFixed(1)}</div><div class="l">cheapest</div></div><div class="box"><div class="n">${mx.toFixed(1)}</div><div class="l">most expensive</div></div></div></div>`;
-  const bw=fc.rows.map(r=>r.band_width).slice().sort((a,b)=>a-b);const med=bw[Math.floor(bw.length/2)]||0;const w=fc.rows.filter(r=>r.band_width>med*1.18).map(r=>fmtTime(r.time));$('falert').innerHTML=w.length?`<div class="ai" style="border-left:4px solid #e8a317;background:#fff8ec;color:#7a5a12"><b>&#9888; Risk alert:</b> the forecast is less certain at ${w.join(', ')} — the price could swing more here.</div>`:'';
-  let t='<table><tr><th>Hour</th><th>Predicted</th><th>Actual</th><th>Lower</th><th>Upper</th></tr>';fc.rows.forEach(r=>t+=`<tr><td>${fmtTime(r.time)}</td><td>${r.predicted}</td><td>${r.actual??'&ndash;'}</td><td>${r.lower}</td><td>${r.upper}</td></tr>`);$('ftable').innerHTML=t+'</table>';});}
-$('fBtn').onclick=loadForecast;
-async function uploadData(){
-  const e=$('upEnergy').files[0], w=$('upWeather').files[0];
-  if(!e||!w){$('upStatus').textContent='Please choose both an energy CSV and a weather CSV.';return;}
-  const fd=new FormData();fd.append('energy',e);fd.append('weather',w);
-  const btn=$('upBtn');btn.disabled=true;const o=btn.innerHTML;btn.innerHTML='<span class="spin"></span>Working...';
-  $('upStatus').innerHTML='<span class="spin"></span>Cleaning and merging your data — this can take a moment...';
-  try{const r=await fetch('/api/upload',{method:'POST',body:fd});const d=await r.json();
-    if(!r.ok)throw new Error(d.detail||'error');
-    $('upStatus').innerHTML=`&#10004; Loaded ${d.rows} rows. You can now forecast any day from <b>${d.min_forecast_day}</b> to <b>${d.max_forecast_day}</b>.`;
-    ['pdate','fdate'].forEach(id=>{const el=$(id);el.min=d.min_forecast_day;el.max=d.max_forecast_day;el.value=d.max_forecast_day;});
-    const note=`Forecasts cover the Spanish market data from ${d.min_forecast_day} to ${d.max_forecast_day}.`;
-    ['pRange','fRange'].forEach(id=>{const el=$(id);if(el)el.textContent=note;});
-  }catch(err){$('upStatus').textContent='Could not process the files: '+err.message;}
-  finally{btn.disabled=false;btn.innerHTML=o;}
-}
-$('fExport').onclick=()=>{if(!lastForecast)return;const rows=lastForecast.rows;const csv=['Hour,Predicted,Actual,Lower,Upper'].concat(rows.map(r=>`${r.time},${r.predicted},${r.actual??''},${r.lower},${r.upper}`)).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='forecast_'+lastForecast.day+'.csv';a.click();};
-async function loadPerf(){try{const d=await api('/api/metrics'),m=d.metrics,o=m.find(x=>x.model.includes('N-BEATSx'));let t='<table><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>MAPE</th><th>R&sup2;</th></tr>';m.forEach(x=>t+=`<tr>${x.model.includes('N-BEATSx')?'<td><b>'+x.model+'</b></td>':'<td>'+x.model+'</td>'}<td>${x.mae}</td><td>${x.rmse}</td><td>${x.mape}%</td><td>${x.r2}</td></tr>`);t+='</table>';$('performance').innerHTML=`<div class="card"><h2><span class="ic">${IC.perf}</span>How reliable is SmartVolt?</h2><div class="kpi"><div class="box"><div class="n">${o.mape}%</div><div class="l">typical error on unseen data</div></div><div class="box"><div class="n">${o.mae}</div><div class="l">average miss (EUR/MWh)</div></div><div class="box save"><div class="n">~94%</div><div class="l">of prices inside the risk band</div></div></div></div><div class="card"><h2><span class="ic">${IC.bar}</span>Compared to other models</h2>${t}<div class="grey">N-BEATSx has the best score on every metric.</div></div>`;}catch(e){$('performance').innerHTML=`<div class="card">${e.message}</div>`;}}
-async function loadHist(){try{const d=await api('/api/history'),h=d.history;let t='<table><tr><th>Day</th><th>Avg price</th><th>MAPE</th><th>Actions</th></tr>';if(!h.length)t+='<tr><td colspan=4 style="color:#94a3b8">No forecasts yet.</td></tr>';h.forEach(x=>t+=`<tr><td>${x.day}</td><td>${x.avg_price??'&ndash;'}</td><td>${x.mape!=null?x.mape+'%':'&ndash;'}</td><td>${x.actions||''}</td></tr>`);$('history').innerHTML=`<div class="card"><h2><span class="ic">${IC.hist}</span>Past forecasts</h2><div class="sub" style="margin-top:0">Every forecast you run is logged here — the day, its average price, the model's error (MAPE), and the estimated saving. This is your <b>forecast history</b>, not your device settings.</div>${t}</table></div>`;}catch(e){$('history').innerHTML=`<div class="card">${e.message}</div>`;}}
+  $('uname').textContent=USERNAME;$('uav').textContent=(USERNAME||'G').charAt(0).toUpperCase();
+  applyTheme();go('home');}
 
 // ---- boot ----
-$('pdate').value=DAY;$('fdate').value=DAY;
-// lock the date pickers to the range actually covered by the loaded data
-(async()=>{try{const s=await api('/api/data/status');
-  const mn=s.min_forecast_day,mx=s.max_forecast_day;
-  ['pdate','fdate'].forEach(id=>{const el=$(id);el.min=mn;el.max=mx;if(el.value<mn||el.value>mx)el.value=mx;});
-  const yrs=(new Date(mx)-new Date(mn))/(1000*3600*24*365);
-  const note=`Forecasts cover the Spanish market data from ${mn} to ${mx}${yrs<1.2?' (this build has one year loaded)':''}.`;
-  ['pRange','fRange'].forEach(id=>{const el=$(id);if(el)el.textContent=note;});
-  // the "upload your own dataset" feature needs the live model (desktop only)
-  if(s.mode==='cloud'){const uc=$('uploadCard');if(uc)uc.style.display='none';}
-}catch(e){}})();
-let bootPrefs={};try{bootPrefs=JSON.parse(localStorage.getItem('sv_prefs')||'{}');}catch(e){}
-const savedTok=localStorage.getItem('sv_token');
-if(savedTok){
-  // validate the saved session with the server; if it's stale, clear it and show login
-  fetch('/api/me?token='+encodeURIComponent(savedTok)).then(r=>{if(!r.ok)throw new Error('stale');return r.json();})
-    .then(d=>{TOKEN=savedTok;localStorage.setItem('sv_apps',JSON.stringify(d.appliances||[]));
-      enterApp(localStorage.getItem('sv_user')||d.username,d.appliances,d.prefs,false);})
-    .catch(()=>{localStorage.removeItem('sv_token');localStorage.removeItem('sv_user');localStorage.removeItem('sv_apps');TOKEN=null;});
-}
-else if(location.search.indexOf('demo')>=0){guest();setTimeout(()=>$('pBtn').click(),300);}
+(async()=>{try{const s=await api('/api/data/status');DMIN=s.min_forecast_day;DMAX=s.max_forecast_day;curSource=s.source||'builtin';if(curDay<DMIN||curDay>DMAX)curDay=DMAX;}catch(e){}
+  const tok=localStorage.getItem('sv_token');
+  if(tok){TOKEN=tok;enterApp(localStorage.getItem('sv_user')||'You',{});}
+})();
 </script>
 </body>
 </html>
