@@ -1,0 +1,17 @@
+# Secrets - never upload your real key
+api_key.txt
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Training logs
+lightning_logs/
+
+# Local database and user uploads (created when the app runs)
+data/forecasting_system.db
+data/user_merged.csv
+data/*.sql

@@ -1,0 +1,9 @@
+To turn on the SmartVolt AI agents and chat:
+1. Get a FREE key at https://console.groq.com (it starts with gsk_)
+2. Rename this file to api_key.txt
+3. Replace the line below with your key, then restart the app
+
+gsk_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+The app also works without a key (it uses built-in explanations instead).
+api_key.txt is listed in .gitignore, so your real key is never uploaded.
